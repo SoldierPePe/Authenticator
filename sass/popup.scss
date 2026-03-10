@@ -17,10 +17,12 @@ body {
   height: 480px;
   transform-origin: left top;
   overflow: hidden;
-  font-family: arial, "Microsoft YaHei";
-  font-size: 16px;
+  font-family: $font-family;
+  font-size: 14px;
   cursor: default;
   user-select: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 
   :focus {
     outline: auto;
@@ -53,20 +55,31 @@ svg {
 
 // Header
 .header {
-  height: 38px;
-  line-height: 38px;
+  height: 44px;
+  line-height: 44px;
   position: relative;
   text-align: center;
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   @include themify($themes) {
     color: themed("black-1");
     background: themed("white-1");
-    border-bottom: themed("grey-2") 1px solid;
+    border-bottom: 1px solid themed("grey-2");
   }
 
   .icon {
     @include hover-black;
     cursor: pointer;
+    padding: 0 $space-xs;
+    border-radius: $radius-sm;
+    transition: all $transition-fast;
+
+    &:hover {
+      @include themify($themes) {
+        background: themed("grey-3");
+      }
+    }
 
     svg {
       vertical-align: sub;
@@ -76,19 +89,19 @@ svg {
 
 #i-menu {
   position: absolute;
-  left: 20px;
+  left: $space-lg;
   bottom: 0;
 }
 
 #i-lock {
   position: absolute;
-  left: 45px;
+  left: 42px;
   bottom: 0;
 }
 
 #i-sync {
   position: absolute;
-  left: 70px;
+  left: 68px;
   bottom: 0;
   cursor: default;
   @include themify($themes) {
@@ -99,43 +112,51 @@ svg {
     svg {
       fill: inherit;
     }
+    @include themify($themes) {
+      background: none !important;
+    }
   }
 }
 
 #i-plus,
 #i-qr {
   position: absolute;
-  right: 45px;
+  right: 42px;
   bottom: 0;
 }
 
 #i-edit {
   position: absolute;
-  right: 20px;
+  right: $space-lg;
   bottom: 0;
 }
 
 #i-close {
   position: absolute;
-  left: 20px;
+  left: $space-lg;
   bottom: 0;
 }
 
 // Search & Filter
 .under-header {
-  padding: 0 10px;
-  margin-left: 10px;
+  padding: 0 $space-md;
+  margin: 0 $space-md;
   font-size: 12px;
-  height: 24px;
-  line-height: 24px;
+  font-weight: 500;
+  height: 32px;
+  line-height: 32px;
   cursor: pointer;
   display: none;
+  border-radius: $radius-sm;
 }
 
 #filter {
   @include themify($themes) {
     background: themed("yellow-2");
+    color: themed("black-1");
   }
+  margin-top: $space-sm;
+  transition: background $transition-fast;
 
   &:hover {
     @include themify($themes) {
@@ -146,70 +167,92 @@ svg {
 
 #search {
   position: relative;
+  margin-top: $space-sm;
+  border-radius: $radius-md;
   @include themify($themes) {
     background: themed("white-1");
-    border: themed("grey-2") 1px solid;
-    border-top: none;
+    border: 1px solid themed("grey-2");
   }
+  transition: all $transition-fast;
 
-  &:hover {
+  &:focus-within {
     @include themify($themes) {
-      background: themed("white-search");
+      border-color: themed("blue-1");
+      box-shadow: 0 0 0 3px themed("blue-light");
     }
   }
 
   input {
-    font-family: arial, "Microsoft YaHei";
+    font-family: $font-family;
     background: none;
     border: none;
     width: 100%;
     height: 100%;
+    font-size: 13px;
+    outline: none;
     @include themify($themes) {
       color: themed("black-search");
+    }
+
+    &::placeholder {
+      @include themify($themes) {
+        color: themed("grey-search");
+      }
     }
   }
 
   #searchHint {
     position: absolute;
-    top: -1px;
+    top: 0;
     right: 0px;
-    padding-right: 10px;
+    padding-right: $space-sm;
     display: grid;
-    grid-template-rows: 4.5px 15px 4.5px;
-    grid-template-columns: 15px;
+    grid-template-rows: 5px 22px 5px;
+    grid-template-columns: 22px;
   }
 
   #searchHintBorder {
     @include themify($themes) {
-      color: themed("white-1");
-      background: themed("grey-search");
+      color: themed("grey-1");
+      background: themed("grey-3");
+      border: 1px solid themed("grey-2");
     }
     text-align: center;
-    border-radius: 1.5px;
-    line-height: 16px;
-    font-weight: bolder;
+    border-radius: $radius-sm;
+    line-height: 20px;
+    font-size: 11px;
+    font-weight: 600;
   }
 }
 
 // Codes
 #codes {
-  height: 442px;
+  height: 436px;
   overflow-x: hidden;
   overflow-y: hidden;
   @include themify($themes) {
     background: themed("grey-background");
   }
-  padding-right: 10px;
+  padding: $space-xs $space-sm $space-xs 0;
 
   .deleteAction {
     @include themify($themes) {
-      @include icon-special(20px, themed("red-1"));
+      @include icon-special(18px, themed("red-1"));
     }
     position: absolute;
-    top: -10px;
-    left: -10px;
+    top: -8px;
+    left: -8px;
     z-index: 10;
     display: none;
+    @include themify($themes) {
+      background: themed("white-1");
+    }
+    border-radius: $radius-full;
+    transition: transform $transition-fast;
+
+    &:hover {
+      transform: scale(1.15);
+    }
   }
 
   &:hover {
@@ -270,7 +313,6 @@ svg {
   }
 
   &:not(.edit) {
-    // Is this used?
     .entry[unencrypted="true"]:hover .warning {
       height: 24px;
     }
@@ -284,49 +326,84 @@ svg {
     @include themify($themes) {
       color: themed("grey-1");
     }
-
-    margin: 20px;
+    margin: $space-3xl $space-xl;
     text-align: center;
+    font-size: 14px;
 
     svg {
       width: 48px;
       height: 48px;
-      margin: 20px;
+      margin: $space-xl;
+      @include themify($themes) {
+        fill: themed("grey-2");
+      }
+    }
+
+    p {
+      line-height: 1.6;
     }
   }
 }
 
 .entry {
-  margin: 10px;
-  margin-right: 0;
-  padding: 10px;
+  margin: $space-sm $space-sm $space-sm $space-md;
+  padding: $space-md $space-lg;
   @include themify($themes) {
-    border: themed("grey-2") 1px solid;
     background: themed("white-1");
+    box-shadow: 0 1px 3px themed("shadow-color");
   }
-  border-radius: 2px;
+  border: none;
+  border-radius: $radius-md;
   position: relative;
   display: block;
   cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    @include themify($themes) {
+      box-shadow: 0 2px 8px themed("shadow-color");
+    }
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 
   .issuer {
     font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
     @include themify($themes) {
-      color: themed("black-1");
+      color: themed("grey-1");
     }
     width: 80%;
     text-overflow: ellipsis;
     overflow: hidden;
+    white-space: nowrap;
+    margin-bottom: 2px;
   }
 
   .code {
-    font-size: 36px;
+    font-size: 32px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
     @include themify($themes) {
       color: themed("blue-1");
     }
     width: 80%;
     user-select: text;
-    font-family: "Droid Sans Mono";
+    font-family: $font-mono;
+    line-height: 1.3;
+  }
+
+  .issuer.account {
+    font-size: 11px;
+    font-weight: 400;
+    margin-top: 2px;
+    @include themify($themes) {
+      color: themed("grey-search");
+    }
   }
 
   .sector,
@@ -334,8 +411,8 @@ svg {
     width: 20px;
     height: 20px;
     position: absolute;
-    right: 10px;
-    bottom: 10px;
+    right: $space-md;
+    bottom: $space-md;
   }
 
   .sector {
@@ -350,7 +427,7 @@ svg {
       transform: rotate(-90deg);
       transform-origin: 50% 50%;
       @include themify($themes) {
-        stroke: themed("grey-1");
+        stroke: themed("grey-search");
       }
       stroke-width: 8px;
       stroke-dasharray: 25.12;
@@ -393,20 +470,24 @@ svg {
       height: 14px;
       width: 70%;
       font-size: 12px;
+      font-family: $font-family;
       outline: none;
+      border-radius: $radius-sm;
+      padding: 2px $space-xs;
       @include themify($themes) {
         background: themed("grey-3");
+        color: themed("black-1");
       }
     }
   }
 
   .movehandle {
     @include themify($themes) {
-      @include icon-special(24px, themed("grey-2"));
+      @include icon-special(20px, themed("grey-2"));
     }
-    height: 98px;
-    line-height: 98px;
-    right: 10px;
+    height: 90px;
+    line-height: 90px;
+    right: $space-md;
     top: 0;
     position: absolute;
     cursor: move;
@@ -416,18 +497,21 @@ svg {
   .showqr,
   .pin {
     @include themify($themes) {
-      @include icon-special(20px, themed("grey-2"));
+      @include icon-special(18px, themed("grey-2"));
     }
     @include hover-black;
-    right: 10px;
-    top: 10px;
+    right: $space-md;
+    top: $space-md;
     position: absolute;
     cursor: pointer;
     opacity: 0;
+    transition: opacity $transition-fast;
+    border-radius: $radius-sm;
+    padding: 2px;
   }
 
   .showqr {
-    right: 35px;
+    right: 34px;
   }
 
   &:hover {
@@ -439,41 +523,25 @@ svg {
     .movehandle {
       svg {
         @include themify($themes) {
-          fill: themed("black-1");
+          fill: themed("grey-1");
         }
       }
     }
   }
-  /*
-    // Is this used?
-    &[dropOver="true"] {
-        border: $grey-1 1px dashed;
-    }
-
-    // Is this used?
-    &[unencrypted="true"] .warning {
-        position: absolute;
-        height: 0;
-        line-height: 12px;
-        font-size: 12px;
-        padding: 0 10px;
-        margin: 0 4px;
-        width: 250px;
-        bottom: 4px;
-        left: 0;
-        background: #EC6959;
-        color: $white;
-        cursor: pointer;
-        overflow: hidden;
-        border-radius: 2px;
-        transition: height 0.2s;
-    }
-    */
 }
 
 .pinnedEntry {
+  @include themify($themes) {
+    border-left: 3px solid themed("blue-1");
+  }
+
   .pin {
     opacity: 1;
+    svg {
+      @include themify($themes) {
+        fill: themed("blue-1") !important;
+      }
+    }
   }
 
   .movehandle {
@@ -493,67 +561,75 @@ svg {
   display: none;
 }
 
-// Modals
+// Notifications
 #notification {
   position: absolute;
-  left: 60px;
+  left: 50%;
+  transform: translateX(-50%);
   top: -1000px;
-  width: 200px;
-  height: 60px;
-  line-height: 60px;
+  min-width: 180px;
+  max-width: 260px;
+  padding: $space-lg $space-xl;
   text-align: center;
   @include themify($themes) {
     background: themed("black-transparent");
     color: themed("white-1");
   }
-  font-size: 20px;
-  border-radius: 2px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: $radius-lg;
+  backdrop-filter: blur(8px);
 
   &.fadein {
-    top: 190px;
-    animation: fadeshow 0.2s 1 ease-out;
+    top: 200px;
+    animation: fadeshow $transition-smooth 1;
   }
 
   &.fadeout {
-    top: 190px;
-    animation: fadehide 0.2s 1 ease-in;
+    top: 200px;
+    animation: fadehide $transition-smooth 1;
   }
 }
 
+// Message Box / Dialogs
 .message-box {
   position: absolute;
-  width: 300px;
-  padding: 10px;
+  width: 288px;
+  padding: $space-xl;
   @include themify($themes) {
     color: themed("black-1");
-    border: themed("grey-1") 1px solid;
     background: themed("white-1");
-    box-shadow: 1px 1px 3px themed("grey-1");
+    box-shadow: $shadow-xl;
   }
-  border-radius: 2px;
-  left: 10px;
+  border: none;
+  border-radius: $radius-lg;
+  left: 16px;
   top: 150px;
   z-index: 1000;
+  font-size: 14px;
+  line-height: 1.5;
 
   .button-small {
-    margin-top: 10px;
-    margin-bottom: 10px;
+    margin-top: $space-md;
+    margin-bottom: $space-sm;
   }
 }
 
 .buttons {
   display: flex;
   justify-content: center;
+  gap: $space-sm;
   text-align: center;
 
   .button-small {
     display: inline-block;
     flex-basis: content;
-    margin: 10px;
-    padding: 5px 20px;
+    margin: $space-md $space-xs;
+    padding: $space-sm $space-xl;
   }
 }
 
+// QR Display
 #qr {
   width: 320px;
   height: 480px;
@@ -566,6 +642,7 @@ svg {
   }
   background-repeat: no-repeat;
   background-position: center;
+  backdrop-filter: blur(8px);
 
   canvas {
     display: none;
@@ -573,12 +650,12 @@ svg {
 
   &.qrfadein {
     top: 0;
-    animation: fadeshow 0.2s 1 ease-out;
+    animation: fadeshow $transition-smooth 1;
   }
 
   &.qrfadeout {
     top: 0;
-    animation: fadehide 0.2s 1 ease-in;
+    animation: fadehide $transition-smooth 1;
   }
 }
 
@@ -589,86 +666,122 @@ svg {
   top: 0;
   left: 0;
   z-index: 900;
+  @include themify($themes) {
+    background: themed("black-transparent");
+  }
+  backdrop-filter: blur(2px);
 }
 
-// Info
+// Info Panel (Page Handler)
 #info {
   position: absolute;
-  height: 460px;
-  width: 300px;
-  padding: 10px;
+  height: 454px;
+  width: 296px;
+  padding: $space-lg;
   @include themify($themes) {
     color: themed("black-1");
-    border: themed("grey-1");
     background: themed("white-1");
-    box-shadow: 1px 1px 3px themed("grey-1");
+    box-shadow: $shadow-xl;
   }
-  left: 10px;
+  border: none;
+  border-radius: $radius-lg;
+  left: 12px;
   top: -1000px;
   z-index: 100;
 
   #infoContent {
-    height: 420px;
+    height: 414px;
     overflow-y: auto;
     overflow-x: hidden;
 
     p {
-      margin-bottom: 20px;
+      margin-bottom: $space-lg;
+      line-height: 1.5;
+      font-size: 13px;
     }
   }
 
   #infoClose {
     @include hover-black;
     @include themify($themes) {
-      @include icon-special(14px, themed("grey-1"));
+      @include icon-special(16px, themed("grey-1"));
     }
-    height: 20px;
-    width: 20px;
+    height: 24px;
+    width: 24px;
     cursor: pointer;
+    border-radius: $radius-sm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background $transition-fast;
+
+    &:hover {
+      @include themify($themes) {
+        background: themed("grey-3");
+      }
+    }
   }
 
   label {
     display: block;
-    margin: 10px 0 0 10px;
+    margin: $space-md 0 0 $space-md;
+    font-size: 13px;
+    font-weight: 500;
   }
 
   .control-group {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: $space-sm 0;
   }
 
   .control-group select {
     width: 100px;
-    padding: 5px 10px;
+    padding: $space-sm $space-md;
+    font-family: $font-family;
+    font-size: 13px;
+    border-radius: $radius-sm;
     @include themify($themes) {
-      border: themed("grey-2") 1px solid;
+      border: 1px solid themed("grey-2");
       background: themed("white-1");
       color: themed("black-1");
     }
+    outline: none;
+    cursor: pointer;
+
+    &:focus {
+      @include themify($themes) {
+        border-color: themed("blue-1");
+      }
+    }
   }
 
+  // Toggle switch
   .control-group input[type="checkbox"] {
     position: relative;
     border: none;
     background: none;
-    width: 34px;
-    height: 16px;
+    width: 40px;
+    height: 22px;
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
     outline: none;
+    cursor: pointer;
   }
 
   .control-group input[type="checkbox"]::before {
     content: "";
     display: block;
-    width: 28px;
-    height: 12px;
-    border-radius: 8px;
-    background: grey;
-    margin: 2px 3px;
-    transition: all 80ms linear;
+    width: 36px;
+    height: 20px;
+    border-radius: $radius-full;
+    @include themify($themes) {
+      background: themed("grey-2");
+    }
+    margin: 1px 2px;
+    transition: all $transition-normal;
   }
 
   .control-group input[type="checkbox"]::after {
@@ -677,36 +790,39 @@ svg {
     position: absolute;
     width: 16px;
     height: 16px;
-    border-radius: 10px;
+    border-radius: $radius-full;
     background: white;
-    top: 0;
-    left: 0;
-    box-shadow: 0 0 2px black;
-    transition: all 80ms linear;
+    top: 3px;
+    left: 4px;
+    box-shadow: $shadow-sm;
+    transition: all $transition-normal;
   }
 
   .control-group input[type="checkbox"]:checked::before {
-    background: #08c;
+    @include themify($themes) {
+      background: themed("blue-1");
+    }
   }
 
   .control-group input[type="checkbox"]:checked::after {
-    transform: matrix(1, 0, 0, 1, 18, 0);
+    transform: translateX(18px);
   }
 
   .combo-label {
     display: flex;
-    margin: 20px;
+    margin: $space-lg;
     margin-right: 0px;
-    font-size: 16px;
+    font-size: 14px;
+    font-weight: 500;
   }
 
   .checkbox {
-    margin: 20px;
+    margin: $space-xl;
   }
 
   select {
-    margin: 20px;
-    font-size: 12px;
+    margin: $space-xl;
+    font-size: 13px;
   }
 
   a {
@@ -719,21 +835,24 @@ svg {
 
   .text {
     display: block;
-    margin: 10px 0 0 10px;
+    margin: $space-md 0 0 $space-md;
+    font-size: 13px;
+    line-height: 1.5;
   }
 
   .warning {
     @include themify($themes) {
       color: themed("red-1");
     }
+    font-weight: 500;
   }
 
   // Advisor
   .advisor {
     .show-all-insights {
       text-align: right;
-      margin: 5px;
-      margin-bottom: 20px;
+      margin: $space-xs;
+      margin-bottom: $space-xl;
       font-size: 12px;
     }
 
@@ -741,22 +860,25 @@ svg {
       @include themify($themes) {
         color: themed("grey-1");
       }
-
-      margin: 20px;
+      margin: $space-xl;
+      font-size: 13px;
     }
 
     .insight {
-      font-size: 14px;
-      border-left: 5px solid;
-      padding-left: 5px;
-      margin: 20px 5px 20px 0;
+      font-size: 13px;
+      border-left: 3px solid;
+      padding-left: $space-md;
+      margin: $space-lg $space-xs $space-lg 0;
+      border-radius: 0 $radius-sm $radius-sm 0;
 
       h3 {
-        margin-bottom: 5px;
+        margin-bottom: $space-xs;
+        font-size: 14px;
       }
 
       p {
-        margin-bottom: 5px !important;
+        margin-bottom: $space-xs !important;
+        font-size: 13px;
       }
 
       .link {
@@ -765,33 +887,35 @@ svg {
 
         a:not(:first-child) {
           @include themify($themes) {
-            border-left: 1px solid themed("grey-1");
+            border-left: 1px solid themed("grey-2");
           }
-          margin-left: 10px;
-          padding-left: 10px;
+          margin-left: $space-sm;
+          padding-left: $space-sm;
         }
       }
     }
 
     [level="danger"] {
-      border-left-color: firebrick;
+      border-left-color: #dc2626;
     }
 
     [level="warning"] {
-      border-left-color: darkorange;
+      border-left-color: #f59e0b;
     }
 
     [level="info"] {
-      border-left-color: #08c;
+      @include themify($themes) {
+        border-left-color: themed("blue-1");
+      }
     }
   }
 
   // Security
   @mixin security-button($margin-left) {
     @extend .button-small;
-    font-size: 12px;
-    margin: 20px 100px;
-    padding: 10px;
+    font-size: 13px;
+    margin: $space-xl 80px;
+    padding: $space-sm $space-lg;
     display: inline-block;
     width: 80px;
     margin-left: $margin-left;
@@ -815,17 +939,17 @@ svg {
   }
 
   &.fadein {
-    top: 10px;
-    animation: fadein 0.2s 1 ease-out;
+    top: 13px;
+    animation: fadein $transition-smooth 1;
   }
 
   &.fadeout {
     top: 110px;
-    animation: fadeout 0.2s 1 ease-in;
+    animation: fadeout $transition-smooth 1;
   }
 
   &.show {
-    top: 10px;
+    top: 13px;
   }
 }
 
@@ -839,49 +963,55 @@ svg {
 
   &.slidein {
     left: 0;
-    animation: slidein 0.2s 1 ease-out;
+    animation: slidein $transition-smooth 1;
     opacity: 1;
   }
 
   &.slideout {
     left: -55px;
-    animation: slideout 0.2s 1 ease-in;
+    animation: slideout $transition-smooth 1;
     opacity: 0;
   }
 
   #menuBody {
     overflow-y: auto;
-    height: 442px;
+    height: 436px;
     width: inherit;
     position: absolute;
     @include themify($themes) {
       background: themed("grey-background");
     }
+    padding: $space-sm 0;
   }
 
   .menuList {
-    margin: 10px;
-    border-radius: 2px;
+    margin: $space-sm $space-md;
+    border-radius: $radius-md;
     @include themify($themes) {
-      border: themed("grey-2") 1px solid;
       background: themed("white-1");
+      box-shadow: 0 1px 3px themed("shadow-color");
     }
+    border: none;
+    overflow: hidden;
 
     p {
       position: relative;
-      padding: 10px;
-      font-size: 16px;
+      padding: $space-md $space-lg;
+      font-size: 14px;
       cursor: pointer;
       display: grid;
-      grid-template-columns: 30px auto;
+      grid-template-columns: 28px auto;
+      gap: $space-sm;
+      align-items: center;
       @include themify($themes) {
-        border-bottom: themed("grey-2") 1px solid;
         color: themed("grey-1");
       }
+      transition: all $transition-fast;
 
       span {
         display: flex;
         align-items: center;
+        justify-content: center;
 
         svg {
           @include themify($themes) {
@@ -894,19 +1024,21 @@ svg {
 
       &:hover {
         @include themify($themes) {
-          background: themed("blue-menu");
-          color: themed("black-1");
+          background: themed("blue-light");
+          color: themed("blue-2");
         }
 
         svg {
           @include themify($themes) {
-            fill: themed("black-1");
+            fill: themed("blue-2");
           }
         }
       }
 
-      &:last-child {
-        border-bottom: none;
+      &:not(:last-child) {
+        @include themify($themes) {
+          border-bottom: 1px solid themed("grey-3");
+        }
       }
     }
   }
@@ -914,9 +1046,10 @@ svg {
 
 #version {
   text-align: center;
-  margin: 10px;
+  margin: $space-lg;
+  font-size: 12px;
   @include themify($themes) {
-    color: themed("grey-1");
+    color: themed("grey-search");
   }
 }
 
@@ -929,10 +1062,10 @@ svg {
 
 @keyframes twinkling {
   0% {
-    color: #eea59c;
+    color: #fecaca;
   }
   100% {
-    color: #dd4b39;
+    color: #ef4444;
   }
 }
 
@@ -982,14 +1115,14 @@ svg {
   }
   100% {
     opacity: 1;
-    top: 10px;
+    top: 13px;
   }
 }
 
 @keyframes fadeout {
   0% {
     opacity: 1;
-    top: 10px;
+    top: 13px;
   }
   100% {
     opacity: 0;
@@ -1019,7 +1152,7 @@ svg {
   }
 }
 
-// Misc
+// Font
 @font-face {
   font-family: "Droid Sans Mono";
   font-style: normal;
@@ -1034,22 +1167,32 @@ svg {
   display: none;
 }
 
+// Scrollbar
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 6px;
   @include themify($themes) {
-    background: themed("grey-3");
+    background: themed("grey-background");
   }
 }
 
 ::-webkit-scrollbar-thumb {
   @include themify($themes) {
-    background-color: themed("grey-1");
-    border: 2px solid themed("grey-3");
+    background-color: themed("grey-2");
   }
-  border-radius: 5px;
+  border-radius: $radius-full;
+
+  &:hover {
+    @include themify($themes) {
+      background-color: themed("grey-1");
+    }
+  }
 }
 
-// Dark overrides
+// ================================
+// Theme Overrides
+// ================================
+
+// Dark theme
 .theme-dark {
   #codes {
     &:not(.edit) {
@@ -1061,62 +1204,97 @@ svg {
 
   .message-box,
   #info {
-    border: #ccc 1px solid;
-    box-shadow: 1px 1px 3px black;
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .entry .issuerEdit input {
-    color: #ccc;
+    color: #e2e8f0;
   }
 
   ::-webkit-scrollbar {
-    background: #1e1e1e !important;
+    background: #0f172a !important;
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.5) !important;
-    border: 2px solid #1e1e1e !important;
+    background-color: rgba(255, 255, 255, 0.2) !important;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.35) !important;
+    }
   }
 }
 
-// Simple & Compact overrides
+// Simple & Compact shared overrides
 .theme-simple,
 .theme-compact {
   .header {
-    border-bottom: white 1px solid !important;
+    border-bottom-color: transparent !important;
 
     &::after {
       content: "";
       display: block;
-      margin: 0 20px -1px 20px;
-      border-bottom: #eee 1px solid;
+      margin: 0 $space-xl -1px $space-xl;
+      @include themify($themes) {
+        border-bottom: 1px solid themed("grey-2");
+      }
+    }
+  }
+
+  .entry {
+    box-shadow: none !important;
+    @include themify($themes) {
+      border-bottom: 1px solid themed("grey-2") !important;
+    }
+    border-radius: 0 !important;
+
+    &:hover {
+      @include themify($themes) {
+        background: themed("blue-light");
+      }
+      transform: none;
     }
   }
 
   #search {
-    border-color: white !important;
-  }
-
-  .entry {
-    border-color: white !important;
-  }
-
-  &:not(.edit) {
-    .entry:hover {
-      background: #f8f8f8;
-    }
+    border-color: transparent !important;
+    box-shadow: none !important;
   }
 
   .control-group select {
-    border-color: white !important;
+    border-color: transparent !important;
   }
 
   .menuList {
-    border-color: white !important;
+    box-shadow: none !important;
 
-    p {
-      border-color: white !important;
+    p:not(:last-child) {
+      @include themify($themes) {
+        border-color: themed("grey-2") !important;
+      }
     }
+  }
+
+  .button {
+    @include themify($themes) {
+      background: themed("grey-3") !important;
+      border-color: themed("grey-3") !important;
+      color: themed("black-1") !important;
+    }
+
+    &:hover {
+      @include themify($themes) {
+        background: themed("blue-light") !important;
+        border-color: themed("blue-light") !important;
+      }
+    }
+  }
+
+  #info {
+    box-shadow: $shadow-lg !important;
+  }
+
+  .message-box {
+    box-shadow: $shadow-lg !important;
   }
 
   ::-webkit-scrollbar {
@@ -1124,27 +1302,7 @@ svg {
   }
 
   ::-webkit-scrollbar-thumb {
-    border: 2px solid white !important;
-  }
-
-  .button {
-    background: #f2f2f2 !important;
-    border: #f2f2f2 1px solid !important;
-    color: black !important;
-
-    &:hover {
-      background: #f8f8f8 !important;
-      border: #f8f8f8 1px solid !important;
-    }
-  }
-
-  #info {
-    box-shadow: none !important;
-  }
-
-  .message-box {
-    border: #ccc 1px solid;
-    box-shadow: none !important;
+    border: none !important;
   }
 }
 
@@ -1153,8 +1311,8 @@ svg {
   #codes {
     &:not(.edit) {
       .entry {
-        padding: 0 10px;
-        margin: 0 0 0 10px;
+        padding: $space-xs $space-md;
+        margin: 0 0 0 $space-md;
       }
     }
   }
@@ -1166,18 +1324,20 @@ svg {
 
     .showqr,
     .pin {
-      top: 0;
+      top: $space-xs;
     }
 
     .code {
-      font-size: 32px;
-      margin-top: -5px;
-      letter-spacing: 0.5rem;
+      font-size: 28px;
+      margin-top: -2px;
+      letter-spacing: 0.1em;
     }
   }
 
   a.entry {
-    border-bottom: #eee 1px solid !important;
+    @include themify($themes) {
+      border-bottom: 1px solid themed("grey-2") !important;
+    }
   }
 
   .issuer.account {
@@ -1192,7 +1352,16 @@ svg {
     color: white;
     background-color: black;
   }
+
   .entry {
+    border: 2px solid white !important;
+    box-shadow: none !important;
+
+    &:hover {
+      transform: none;
+      border-color: yellow !important;
+    }
+
     .issuerEdit {
       input {
         color: white;
@@ -1217,6 +1386,9 @@ svg {
 
   #menu {
     .menuList {
+      border: 1px solid white;
+      box-shadow: none;
+
       p:hover {
         color: black;
 
@@ -1228,6 +1400,8 @@ svg {
   }
 
   .header {
+    border-bottom: 2px solid white !important;
+
     .icon {
       svg {
         fill: yellow;
@@ -1249,6 +1423,7 @@ svg {
         svg {
           fill: yellow;
         }
+        background: none !important;
       }
     }
   }
@@ -1262,7 +1437,7 @@ svg {
   }
 
   #info {
-    border: 1px solid white;
+    border: 2px solid white;
     box-shadow: none;
   }
 
@@ -1283,10 +1458,19 @@ svg {
   }
 
   .input {
-    color: black;
+    color: white !important;
+    background: black !important;
+    border: 2px solid white !important;
+  }
+
+  .message-box {
+    border: 2px solid white;
+    box-shadow: none !important;
   }
 
   #notification {
+    border: 2px solid white;
+
     &.fadein {
       opacity: 1;
       animation: none;
@@ -1298,73 +1482,72 @@ svg {
     }
   }
 
+  #overlay {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: none;
+  }
+
   ::-webkit-scrollbar {
     background: black !important;
   }
 
   ::-webkit-scrollbar-thumb {
     background-color: white !important;
-    border: 2px solid black !important;
+    border: none !important;
   }
 }
 
 // Flat overrides
 .theme-flat {
   .header {
-    color: black;
-    background: white;
-    border-bottom: #f5f4f7 1px solid;
+    @include themify($themes) {
+      border-bottom-color: themed("grey-3");
+    }
   }
 
-  #codes {
-    background: #fcfbff;
-
-    .entry {
-      border: #f5f4f7 1px solid;
-      border-radius: 8px;
+  .entry {
+    @include themify($themes) {
+      border: 1px solid themed("grey-3");
     }
+    border-radius: $radius-lg;
   }
 
   #menu {
     #menuBody {
-      background: #fcfbff;
-
       .menuList {
-        margin: 10px;
-        border-radius: 8px;
-        border: #f5f4f7 1px solid;
-        background: white;
-
-        p {
-          color: #727272;
-
-          &:not(:last-child) {
-            border-bottom: #f5f4f7 1px solid;
-          }
-
-          span svg {
-            fill: #727272;
-          }
+        border-radius: $radius-lg;
+        @include themify($themes) {
+          border: 1px solid themed("grey-3");
         }
+        box-shadow: none;
       }
     }
 
     #version {
-      bottom: 0px;
       position: relative;
-      margin: 10px auto;
+      margin: $space-md auto;
       width: 100%;
-      color: #727272;
-      font-size: 0.9em;
     }
 
     #info {
-      border-radius: 8px;
-      border: #f5f4f7 1px solid;
+      border-radius: $radius-lg;
+      @include themify($themes) {
+        border: 1px solid themed("grey-3");
+      }
 
       .control-group {
-        border-bottom: #f5f4f7 1px solid;
+        @include themify($themes) {
+          border-bottom: 1px solid themed("grey-3");
+        }
+        padding: $space-sm 0;
       }
+    }
+  }
+
+  .pinnedEntry {
+    @include themify($themes) {
+      border-left: 3px solid themed("blue-1");
+      border-color: themed("blue-1") themed("grey-3") themed("grey-3");
     }
   }
 }

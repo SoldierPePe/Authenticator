@@ -1,29 +1,66 @@
 @use "sass:map";
 
-// Re-usable ui components
+// Modern Design System for TAuth
+// ==============================
 
-// Colors
-// go from darkest to lightest
+// Font stack
+$font-family:
+  -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+  sans-serif;
+$font-mono:
+  "Droid Sans Mono", "SF Mono", "Fira Code", "Cascadia Code", monospace;
 
+// Spacing scale
+$space-xs: 4px;
+$space-sm: 8px;
+$space-md: 12px;
+$space-lg: 16px;
+$space-xl: 20px;
+$space-2xl: 24px;
+$space-3xl: 32px;
+
+// Border radius
+$radius-sm: 6px;
+$radius-md: 10px;
+$radius-lg: 14px;
+$radius-xl: 18px;
+$radius-full: 9999px;
+
+// Shadows
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+$shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+$shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
+$shadow-xl: 0 8px 32px rgba(0, 0, 0, 0.16);
+
+// Transitions
+$transition-fast: 120ms ease;
+$transition-normal: 200ms ease;
+$transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+// Colors - Theme Maps
 $themes: (
   normal: (
-    black-1: black,
-    black-transparent: rgba(0, 0, 0, 0.5),
-    white-1: white,
-    white-transparent: rgba(255, 255, 255, 0.5),
-    grey-1: grey,
-    grey-2: #ccc,
-    grey-3: #eee,
-    grey-background: #eee,
-    blue-1: #08c,
-    yellow-1: #fff1ba,
-    yellow-2: #fff4cc,
-    red-1: #dd4b39,
-    red-2: #eea59c,
-    black-search: #2a2a2e,
-    white-search: #f9f9fa,
-    grey-search: #b1b1b3,
-    blue-menu: #f4fcff,
+    black-1: #1a1a2e,
+    black-transparent: rgba(15, 23, 42, 0.65),
+    white-1: #ffffff,
+    white-transparent: rgba(255, 255, 255, 0.85),
+    grey-1: #64748b,
+    grey-2: #e2e8f0,
+    grey-3: #f8fafc,
+    grey-background: #f1f5f9,
+    blue-1: #3b82f6,
+    blue-2: #2563eb,
+    blue-light: #eff6ff,
+    yellow-1: #fef3c7,
+    yellow-2: #fef9c3,
+    red-1: #ef4444,
+    red-2: #fecaca,
+    green-1: #22c55e,
+    black-search: #1e293b,
+    white-search: #f8fafc,
+    grey-search: #94a3b8,
+    blue-menu: #f0f9ff,
+    shadow-color: rgba(0, 0, 0, 0.06),
   ),
   accessibility: (
     black-1: white,
@@ -35,90 +72,110 @@ $themes: (
     grey-3: white,
     grey-background: black,
     blue-1: yellow,
+    blue-2: yellow,
+    blue-light: rgba(255, 255, 0, 0.15),
     yellow-1: yellow,
     yellow-2: yellow,
     red-1: red,
     red-2: red,
+    green-1: lime,
     black-search: white,
     white-search: black,
     grey-search: white,
     blue-menu: cyan,
+    shadow-color: rgba(255, 255, 255, 0.2),
   ),
   dark: (
-    black-1: #ccc,
-    black-transparent: rgba(255, 255, 255, 0.5),
-    white-1: #242424,
-    white-transparent: rgba(0, 0, 0, 0.5),
-    grey-1: grey,
-    grey-2: rgba(255, 255, 255, 0.15),
-    grey-3: #444,
-    grey-background: #1e1e1e,
-    blue-1: white,
+    black-1: #e2e8f0,
+    black-transparent: rgba(255, 255, 255, 0.6),
+    white-1: #1e293b,
+    white-transparent: rgba(0, 0, 0, 0.6),
+    grey-1: #94a3b8,
+    grey-2: rgba(255, 255, 255, 0.1),
+    grey-3: #334155,
+    grey-background: #0f172a,
+    blue-1: #60a5fa,
+    blue-2: #3b82f6,
+    blue-light: rgba(59, 130, 246, 0.15),
     yellow-1: rgba(255, 255, 255, 0.5),
     yellow-2: rgba(255, 255, 255, 0.35),
-    red-1: #dd4b39,
-    red-2: #61221a,
-    black-search: white,
-    white-search: #202020,
+    red-1: #f87171,
+    red-2: #7f1d1d,
+    green-1: #4ade80,
+    black-search: #e2e8f0,
+    white-search: #1e293b,
     grey-search: rgba(255, 255, 255, 0.35),
-    blue-menu: #2a2d2e,
+    blue-menu: #1e293b,
+    shadow-color: rgba(0, 0, 0, 0.3),
   ),
   simple: (
-    black-1: black,
-    black-transparent: rgba(0, 0, 0, 0.5),
-    white-1: white,
-    white-transparent: rgba(255, 255, 255, 0.5),
-    grey-1: grey,
-    grey-2: #ccc,
-    grey-3: #eee,
-    grey-background: #fff,
-    blue-1: #08c,
-    yellow-1: #fff1ba,
-    yellow-2: #fff4cc,
-    red-1: #dd4b39,
-    red-2: #eea59c,
-    black-search: #2a2a2e,
-    white-search: #f9f9fa,
-    grey-search: #b1b1b3,
-    blue-menu: #f4fcff,
+    black-1: #1a1a2e,
+    black-transparent: rgba(15, 23, 42, 0.65),
+    white-1: #ffffff,
+    white-transparent: rgba(255, 255, 255, 0.85),
+    grey-1: #64748b,
+    grey-2: #f1f5f9,
+    grey-3: #f8fafc,
+    grey-background: #ffffff,
+    blue-1: #3b82f6,
+    blue-2: #2563eb,
+    blue-light: #eff6ff,
+    yellow-1: #fef3c7,
+    yellow-2: #fef9c3,
+    red-1: #ef4444,
+    red-2: #fecaca,
+    green-1: #22c55e,
+    black-search: #1e293b,
+    white-search: #f8fafc,
+    grey-search: #94a3b8,
+    blue-menu: #f0f9ff,
+    shadow-color: rgba(0, 0, 0, 0.04),
   ),
   compact: (
-    black-1: black,
-    black-transparent: rgba(0, 0, 0, 0.5),
-    white-1: white,
-    white-transparent: rgba(255, 255, 255, 0.5),
-    grey-1: grey,
-    grey-2: #ccc,
-    grey-3: #eee,
-    grey-background: #fff,
-    blue-1: #08c,
-    yellow-1: #fff1ba,
-    yellow-2: #fff4cc,
-    red-1: #dd4b39,
-    red-2: #eea59c,
-    black-search: #2a2a2e,
-    white-search: #f9f9fa,
-    grey-search: #b1b1b3,
-    blue-menu: #f4fcff,
+    black-1: #1a1a2e,
+    black-transparent: rgba(15, 23, 42, 0.65),
+    white-1: #ffffff,
+    white-transparent: rgba(255, 255, 255, 0.85),
+    grey-1: #64748b,
+    grey-2: #f1f5f9,
+    grey-3: #f8fafc,
+    grey-background: #ffffff,
+    blue-1: #3b82f6,
+    blue-2: #2563eb,
+    blue-light: #eff6ff,
+    yellow-1: #fef3c7,
+    yellow-2: #fef9c3,
+    red-1: #ef4444,
+    red-2: #fecaca,
+    green-1: #22c55e,
+    black-search: #1e293b,
+    white-search: #f8fafc,
+    grey-search: #94a3b8,
+    blue-menu: #f0f9ff,
+    shadow-color: rgba(0, 0, 0, 0.04),
   ),
   flat: (
-    black-1: black,
-    black-transparent: rgba(0, 0, 0, 0.5),
-    white-1: white,
-    white-transparent: rgba(255, 255, 255, 0.5),
-    grey-1: grey,
-    grey-2: #ccc,
-    grey-3: #eee,
-    grey-background: #eee,
-    blue-1: #08c,
-    yellow-1: #fff1ba,
-    yellow-2: #fff4cc,
-    red-1: #dd4b39,
-    red-2: #eea59c,
-    black-search: #2a2a2e,
-    white-search: #f9f9fa,
-    grey-search: #b1b1b3,
-    blue-menu: #f4fcff,
+    black-1: #1a1a2e,
+    black-transparent: rgba(15, 23, 42, 0.65),
+    white-1: #ffffff,
+    white-transparent: rgba(255, 255, 255, 0.85),
+    grey-1: #64748b,
+    grey-2: #e2e8f0,
+    grey-3: #f8fafc,
+    grey-background: #f8fafc,
+    blue-1: #6366f1,
+    blue-2: #4f46e5,
+    blue-light: #eef2ff,
+    yellow-1: #fef3c7,
+    yellow-2: #fef9c3,
+    red-1: #ef4444,
+    red-2: #fecaca,
+    green-1: #22c55e,
+    black-search: #1e293b,
+    white-search: #f8fafc,
+    grey-search: #94a3b8,
+    blue-menu: #f5f3ff,
+    shadow-color: rgba(0, 0, 0, 0.04),
   ),
 );
 
@@ -147,7 +204,7 @@ $theme-map: null;
   @return map.get($theme-map, $key);
 }
 
-// Shared
+// Shared Mixins
 @mixin hover-black {
   &:hover {
     svg {
@@ -167,53 +224,78 @@ $theme-map: null;
   }
 }
 
-// Classes
+// Shared Classes
 .button {
-  margin: 10px;
-  padding: 20px;
-  border-radius: 2px;
+  margin: $space-md $space-md;
+  padding: $space-lg $space-xl;
+  border-radius: $radius-md;
   position: relative;
   text-align: center;
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: $font-family;
   width: -moz-available;
   width: -webkit-fill-available;
   @include themify($themes) {
-    background: themed("white-1");
-    border: themed("grey-2") 1px solid;
+    background: themed("grey-3");
+    border: 1px solid themed("grey-2");
     color: themed("grey-1");
   }
   cursor: pointer;
+  transition: all $transition-fast;
 
   &:hover {
     @include themify($themes) {
       color: themed("black-1");
+      background: themed("blue-light");
+      border-color: themed("blue-1");
     }
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 }
 
 .button-small {
   @extend .button;
-  font-size: 12px;
-  margin: 20px 100px;
-  padding: 10px;
+  font-size: 13px;
+  margin: $space-md 80px;
+  padding: $space-sm $space-lg;
 }
 
 .input {
   display: block;
-  margin: 15px 10px 20px 10px;
-  padding: 5px 10px;
+  margin: $space-md $space-md $space-lg $space-md;
+  padding: $space-sm $space-md;
   width: 260px;
   border: none;
+  border-radius: $radius-sm;
+  font-family: $font-family;
+  font-size: 14px;
   @include themify($themes) {
     color: themed("black-1");
-    border-bottom: themed("black-1") 1px solid;
-    background: themed("grey-3");
+    border: 1px solid themed("grey-2");
+    background: themed("white-1");
   }
   outline: none;
+  transition: border-color $transition-fast;
+
+  &:focus {
+    @include themify($themes) {
+      border-color: themed("blue-1");
+      box-shadow: 0 0 0 3px themed("blue-light");
+    }
+  }
 }
 
 a {
   @include themify($themes) {
     color: themed("blue-1");
+  }
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
   }
 }
