@@ -7,6 +7,8 @@
       entry: true,
       pinnedEntry: entry.pinned,
       'no-copy': noCopy(entry.code),
+      filtered: filtered,
+      notSearched: notSearched,
     }"
     v-on:click="copyCode(entry)"
     v-on:keydown.enter="copyCode(entry)"
@@ -127,7 +129,11 @@ const { theme } = storeToRefs(menuStore);
 defineProps<{
   entry: OTPEntry;
   tabindex: number;
+  filtered: boolean;
+  notSearched: boolean;
 }>();
+
+defineOptions({ inheritAttrs: false });
 
 function noCopy(code: string) {
   return (
