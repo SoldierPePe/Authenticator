@@ -11,7 +11,7 @@
     "edge": "bash scripts/build.sh edge",
     "prod": "bash scripts/build.sh prod",
     "pretest": "bash scripts/build.sh test",
-    "test": "node scripts/test-runner.js"
+    "test": "node scripts/test-runner.cjs"
   },
   "repository": {
     "type": "git",

@@ -67,7 +67,8 @@ elif [[ $PLATFORM = "test" ]]; then
         viteBuildEntry $entry test
     done
     viteBuildEntry test test
-    ./node_modules/.bin/tsc --target ES2015 --esModuleInterop --moduleResolution nodenext --module commonjs scripts/test-runner.ts
+    ./node_modules/.bin/tsc --target ES2015 --esModuleInterop --moduleResolution node --module commonjs scripts/test-runner.ts
+    mv scripts/test-runner.js scripts/test-runner.cjs
 else
     for entry in $ENTRIES; do
         viteBuildEntry $entry development

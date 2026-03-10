@@ -42,6 +42,13 @@ export default defineConfig(({ mode }) => ({
     emptyOutDir: false,
     rollupOptions: {
       input: getEntry(mode),
+      onwarn(warning, warn) {
+        // Suppress known harmless warnings
+        if (warning.code === 'MODULE_LEVEL_DIRECTIVE') return;
+        if (warning.message?.includes('has been externalized for browser compatibility')) return;
+        if (warning.message?.includes('Use of eval')) return;
+        warn(warning);
+      },
       output: {
         entryFileNames: '[name].js',
         // Self-contained bundles for browser extension
