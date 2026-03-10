@@ -1,14 +1,15 @@
-import Vue from "vue";
+import { createApp } from "vue";
 import OptionsView from "./components/Options.vue";
 import { loadI18nMessages } from "./store/i18n";
 
 async function init() {
-  // i18n
-  Vue.prototype.i18n = await loadI18nMessages();
+  // Load i18n messages
+  const i18n = await loadI18nMessages();
 
-  new Vue({
-    render: (h) => h(OptionsView),
-  }).$mount("#options");
+  // Create and mount app
+  const app = createApp(OptionsView);
+  app.config.globalProperties.i18n = i18n;
+  app.mount("#options");
 }
 
 init();

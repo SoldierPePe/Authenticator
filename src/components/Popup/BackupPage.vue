@@ -68,110 +68,103 @@
     </div>
   </div>
 </template>
-<script lang="ts">
-import Vue from "vue";
+<script setup lang="ts">
+import { ref, computed } from "vue";
 import { isSafari } from "../../browser";
 
-export default Vue.extend({
-  data: function () {
-    const exportData = this.$store.state.accounts.exportData;
-    const exportEncData = this.$store.state.accounts.exportEncData;
-    const key = this.$store.state.accounts.key;
+import { useAccountsStore } from "../../store/Accounts";
+import { useMenuStore } from "../../store/Menu";
+import { useStyleStore } from "../../store/Style";
+import { useCurrentViewStore } from "../../store/CurrentView";
 
-    return {
-      unsupportedAccounts: hasUnsupportedAccounts(exportData),
-      exportFile: getBackupFile(exportData),
-      exportEncryptedFile: getBackupFile(exportEncData, key),
-      exportOneLineOtpAuthFile: getOneLineOtpBackupFile(exportData),
-    };
-  },
-  computed: {
-    defaultEncryption: function () {
-      return this.$store.state.accounts.defaultEncryption;
-    },
-    exportDisabled: function () {
-      return this.$store.state.menu.exportDisabled;
-    },
-    currentlyEncrypted: function () {
-      return this.$store.getters["accounts/currentlyEncrypted"];
-    },
-    backupDisabled: function () {
-      return this.$store.state.menu.backupDisabled;
-    },
-    isDataLinkSupported: function () {
-      return !isSafari;
-    },
-    isBackupServiceSupported: function () {
-      return !isSafari;
-    },
-  },
-  methods: {
-    showInfo(tab: string) {
-      if (tab === "DropboxPage") {
-        chrome.permissions.request(
-          { origins: ["https://*.dropboxapi.com/*"] },
-          async (granted) => {
-            if (granted) {
-              this.$store.commit("style/showInfo");
-              this.$store.commit("currentView/changeView", tab);
-            }
-          },
-        );
+const accounts = useAccountsStore();
+const menuStore = useMenuStore();
+const styleStore = useStyleStore();
+const currentViewStore = useCurrentViewStore();
+
+const exportData = accounts.exportData;
+const exportEncData = accounts.exportEncData;
+const key = (accounts as any).key;
+
+const unsupportedAccounts = ref(hasUnsupportedAccounts(exportData));
+const exportFile = ref(getBackupFile(exportData));
+const exportEncryptedFile = ref(getBackupFile(exportEncData, key));
+const exportOneLineOtpAuthFile = ref(getOneLineOtpBackupFile(exportData));
+
+const defaultEncryption = computed(() => accounts.defaultEncryption);
+const exportDisabled = computed(() => menuStore.exportDisabled);
+const currentlyEncrypted = computed(() => accounts.currentlyEncrypted);
+const backupDisabled = computed(() => menuStore.backupDisabled);
+const isDataLinkSupported = computed(() => !isSafari);
+const isBackupServiceSupported = computed(() => !isSafari);
+
+function showInfo(tab: string) {
+  if (tab === "DropboxPage") {
+    chrome.permissions.request(
+      { origins: ["https://*.dropboxapi.com/*"] },
+      async (granted) => {
+        if (granted) {
+          styleStore.showInfo();
+          currentViewStore.changeView(tab);
+        }
+      },
+    );
+    return;
+  } else if (tab === "DrivePage") {
+    chrome.permissions.request(
+      {
+        origins: [
+          "https://www.googleapis.com/*",
+          "https://accounts.google.com/o/oauth2/revoke",
+        ],
+      },
+      async (granted) => {
+        if (granted) {
+          styleStore.showInfo();
+          currentViewStore.changeView(tab);
+        }
         return;
-      } else if (tab === "DrivePage") {
-        chrome.permissions.request(
-          {
-            origins: [
-              "https://www.googleapis.com/*",
-              "https://accounts.google.com/o/oauth2/revoke",
-            ],
-          },
-          async (granted) => {
-            if (granted) {
-              this.$store.commit("style/showInfo");
-              this.$store.commit("currentView/changeView", tab);
-            }
-            return;
-          },
-        );
+      },
+    );
+    return;
+  } else if (tab === "OneDrivePage") {
+    chrome.permissions.request(
+      {
+        origins: [
+          "https://graph.microsoft.com/me/*",
+          "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+        ],
+      },
+      async (granted) => {
+        if (granted) {
+          styleStore.showInfo();
+          currentViewStore.changeView(tab);
+        }
         return;
-      } else if (tab === "OneDrivePage") {
-        chrome.permissions.request(
-          {
-            origins: [
-              "https://graph.microsoft.com/me/*",
-              "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-            ],
-          },
-          async (granted) => {
-            if (granted) {
-              this.$store.commit("style/showInfo");
-              this.$store.commit("currentView/changeView", tab);
-            }
-            return;
-          },
-        );
-        return;
-      }
-    },
-    downloadBackUpOneLineOtpAuthFile() {
-      const exportData = this.$store.state.accounts.exportData;
-      const t = getOneLineOtpBackupFile(exportData);
-      window.open(t);
-    },
-    downloadBackUpExportFile() {
-      const exportData = this.$store.state.accounts.exportData;
-      const t = getBackupFile(exportData);
-      window.open(t);
-    },
-    downloadBackUpExportEncryptedFile() {
-      const exportEncData = this.$store.state.accounts.exportEncData;
-      const key = this.$store.state.accounts.key;
-      const t = getBackupFile(exportEncData, key);
-      window.open(t);
-    },
-  },
-});
+      },
+    );
+    return;
+  }
+}
+
+function downloadBackUpOneLineOtpAuthFile() {
+  const exportData = accounts.exportData;
+  const t = getOneLineOtpBackupFile(exportData);
+  window.open(t);
+}
+
+function downloadBackUpExportFile() {
+  const exportData = accounts.exportData;
+  const t = getBackupFile(exportData);
+  window.open(t);
+}
+
+function downloadBackUpExportEncryptedFile() {
+  const exportEncData = accounts.exportEncData;
+  const key = (accounts as any).key;
+  const t = getBackupFile(exportEncData, key);
+  window.open(t);
+}
 
 function hasUnsupportedAccounts(exportData: { [h: string]: RawOTPStorage }) {
   for (const entry of Object.keys(exportData)) {

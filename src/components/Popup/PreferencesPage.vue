@@ -60,149 +60,148 @@
     <a-button @click="popOut()">{{ i18n.popout }}</a-button>
   </div>
 </template>
-<script lang="ts">
-import Vue from "vue";
+<script setup lang="ts">
+import { ref, computed, getCurrentInstance } from "vue";
 import { isFirefox, isSafari } from "../../browser";
 import { UserSettings } from "../../models/settings";
 
-export default Vue.extend({
-  computed: {
-    zoom: {
-      get(): number {
-        return this.$store.state.menu.zoom;
-      },
-      set(zoom: number) {
-        this.$store.commit("menu/setZoom", zoom);
-      },
-    },
-    useAutofill: {
-      get(): boolean {
-        return this.$store.state.menu.useAutofill;
-      },
-      set(useAutofill: boolean) {
-        this.$store.commit("menu/setAutofill", useAutofill);
-      },
-    },
-    smartFilter: {
-      get(): boolean {
-        return this.$store.state.menu.smartFilter;
-      },
-      set(smartFilter: boolean) {
-        this.$store.commit("menu/setSmartFilter", smartFilter);
-        this.$store.commit(
-          "notification/alert",
-          this.i18n.activate_auto_filter,
-        );
-      },
-    },
-    enableContextMenu: {
-      get(): boolean {
-        return this.$store.state.menu.enableContextMenu;
-      },
-      set(enableContextMenu: boolean) {
-        this.$store.commit("menu/setEnableContextMenu", enableContextMenu);
-      },
-    },
-    theme: {
-      get(): string {
-        return this.$store.state.menu.theme;
-      },
-      set(theme: string) {
-        this.$store.commit("menu/setTheme", theme);
-      },
-    },
-    defaultEncryption(): string {
-      return this.$store.state.accounts.defaultEncryption;
-    },
-    enforceAutolock() {
-      return this.$store.state.menu.enforceAutolock;
-    },
-    autolock: {
-      get(): number {
-        if (this.$store.state.menu.enforceAutolock) {
-          return this.$store.state.menu.enforceAutolock;
-        } else {
-          return this.$store.state.menu.autolock;
-        }
-      },
-      set(autolock: number) {
-        this.$store.commit("menu/setAutolock", autolock);
-        chrome.runtime.sendMessage({ action: "resetAutolock" });
-      },
-    },
-    storageArea() {
-      return this.$store.state.menu.storageArea;
-    },
-    browserSync: {
-      get(): boolean {
-        return this.newStorageLocation === "sync";
-      },
-      set(value) {
-        this.newStorageLocation = value ? "sync" : "local";
-      },
-    },
-    isSupported: {
-      get(): boolean {
-        return !isFirefox && !isSafari;
-      },
-    },
+import { useMenuStore } from "../../store/Menu";
+import { useAccountsStore } from "../../store/Accounts";
+import { useCurrentViewStore } from "../../store/CurrentView";
+import { useNotificationStore } from "../../store/Notification";
+
+const i18n = getCurrentInstance()!.appContext.config.globalProperties.i18n;
+
+const menuStore = useMenuStore();
+const accounts = useAccountsStore();
+const currentViewStore = useCurrentViewStore();
+const notificationStore = useNotificationStore();
+
+const newStorageLocation = ref("");
+
+// Run on setup (equivalent of created())
+UserSettings.updateItems().then(() => {
+  newStorageLocation.value =
+    menuStore.storageArea || UserSettings.items.storageLocation;
+});
+
+const zoom = computed({
+  get(): number {
+    return menuStore.zoom;
   },
-  data() {
-    return {
-      newStorageLocation: "",
-    };
-  },
-  created() {
-    UserSettings.updateItems().then(() => {
-      this.newStorageLocation =
-        this.$store.state.menu.storageArea ||
-        UserSettings.items.storageLocation;
-    });
-  },
-  methods: {
-    popOut() {
-      let windowType;
-      if (isFirefox) {
-        windowType = "detached_panel";
-      } else {
-        windowType = "panel";
-      }
-      chrome.windows.create({
-        url: chrome.runtime.getURL("view/popup.html?popup=true"),
-        type: windowType as chrome.windows.createTypeEnum,
-        height: window.innerHeight,
-        width: window.innerWidth,
-      });
-    },
-    migrateStorage() {
-      this.$store.commit("currentView/changeView", "LoadingPage");
-      (this.$store
-        .dispatch("accounts/migrateStorage", this.newStorageLocation)
-        .then((m) => {
-          this.$store.commit("notification/alert", this.i18n[m]);
-          this.$store.commit("currentView/changeView", "PreferencesPage");
-        }),
-        (r: string) => {
-          this.$store.commit("notification/alert", this.i18n.updateFailure + r);
-          this.$store.commit("currentView/changeView", "PreferencesPage");
-        });
-    },
-    requireContextMenuPermission() {
-      chrome.permissions.request(
-        {
-          permissions: ["contextMenus"],
-        },
-        (granted) => {
-          if (!granted) {
-            this.enableContextMenu = false;
-            return;
-          }
-          chrome.runtime.sendMessage({
-            action: "updateContextMenu",
-          });
-        },
-      );
-    },
+  set(val: number) {
+    menuStore.setZoom(val);
   },
 });
+
+const useAutofill = computed({
+  get(): boolean {
+    return menuStore.useAutofill;
+  },
+  set(val: boolean) {
+    menuStore.setAutofill(val);
+  },
+});
+
+const smartFilter = computed({
+  get(): boolean {
+    return menuStore.smartFilter;
+  },
+  set(val: boolean) {
+    menuStore.setSmartFilter(val);
+    notificationStore.alert(i18n.activate_auto_filter);
+  },
+});
+
+const enableContextMenu = computed({
+  get(): boolean {
+    return menuStore.enableContextMenu;
+  },
+  set(val: boolean) {
+    menuStore.setEnableContextMenu(val);
+  },
+});
+
+const theme = computed({
+  get(): string {
+    return menuStore.theme;
+  },
+  set(val: string) {
+    menuStore.setTheme(val);
+  },
+});
+
+const defaultEncryption = computed(() => accounts.defaultEncryption);
+const enforceAutolock = computed(() => menuStore.enforceAutolock);
+
+const autolock = computed({
+  get(): number {
+    if (menuStore.enforceAutolock) {
+      return menuStore.enforceAutolock;
+    } else {
+      return menuStore.autolock;
+    }
+  },
+  set(val: number) {
+    menuStore.setAutolock(val);
+    chrome.runtime.sendMessage({ action: "resetAutolock" });
+  },
+});
+
+const storageArea = computed(() => menuStore.storageArea);
+
+const browserSync = computed({
+  get(): boolean {
+    return newStorageLocation.value === "sync";
+  },
+  set(value: boolean) {
+    newStorageLocation.value = value ? "sync" : "local";
+  },
+});
+
+const isSupported = computed(() => !isFirefox && !isSafari);
+
+function popOut() {
+  let windowType;
+  if (isFirefox) {
+    windowType = "detached_panel";
+  } else {
+    windowType = "panel";
+  }
+  chrome.windows.create({
+    url: chrome.runtime.getURL("view/popup.html?popup=true"),
+    type: windowType as chrome.windows.createTypeEnum,
+    height: window.innerHeight,
+    width: window.innerWidth,
+  });
+}
+
+function migrateStorage() {
+  currentViewStore.changeView("LoadingPage");
+  (accounts.migrateStorage(newStorageLocation.value).then((m: string) => {
+    notificationStore.alert(i18n[m]);
+    currentViewStore.changeView("PreferencesPage");
+  }),
+    (r: string) => {
+      notificationStore.alert(i18n.updateFailure + r);
+      currentViewStore.changeView("PreferencesPage");
+    });
+}
+
+function requireContextMenuPermission() {
+  chrome.permissions.request(
+    {
+      permissions: ["contextMenus"],
+    },
+    (granted) => {
+      if (!granted) {
+        enableContextMenu.value = false;
+        return;
+      }
+      chrome.runtime.sendMessage({
+        action: "updateContextMenu",
+      });
+    },
+  );
+}
 </script>

@@ -1,12 +1,10 @@
 <template>
   <div class="advisor">
     <div v-if="ignoreList.length > 0" class="show-all-insights">
-      <a href="#" v-on:click="clearIgnoreList">{{
-        this.i18n.show_all_insights
-      }}</a>
+      <a href="#" v-on:click="clearIgnoreList">{{ i18n.show_all_insights }}</a>
     </div>
     <div v-if="insights.length === 0" class="no-insight">
-      {{ this.i18n.no_insight_available }}
+      {{ i18n.no_insight_available }}
     </div>
     <AdvisorInsight
       class="insight"
@@ -17,29 +15,24 @@
     />
   </div>
 </template>
-<script lang="ts">
-import Vue from "vue";
+<script setup lang="ts">
+import { onMounted, getCurrentInstance } from "vue";
+import { storeToRefs } from "pinia";
 import AdvisorInsight from "./AdvisorInsight.vue";
 
-export default Vue.extend({
-  mounted: function () {
-    this.$store.commit("advisor/updateInsight");
-  },
-  computed: {
-    insights: function () {
-      return this.$store.state.advisor.insights;
-    },
-    ignoreList: function () {
-      return this.$store.state.advisor.ignoreList;
-    },
-  },
-  components: {
-    AdvisorInsight,
-  },
-  methods: {
-    clearIgnoreList: function () {
-      this.$store.commit("advisor/clearIgnoreList");
-    },
-  },
+import { useAdvisorStore } from "../../store/Advisor";
+
+const i18n = getCurrentInstance()!.appContext.config.globalProperties.i18n;
+
+const advisorStore = useAdvisorStore();
+
+const { insights, ignoreList } = storeToRefs(advisorStore);
+
+onMounted(() => {
+  advisorStore.updateInsight();
 });
+
+function clearIgnoreList() {
+  advisorStore.clearIgnoreList();
+}
 </script>

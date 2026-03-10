@@ -71,9 +71,9 @@
     </div>
   </div>
 </template>
-<script lang="ts">
-import Vue from "vue";
-import { mapState } from "vuex";
+<script setup lang="ts">
+import { getCurrentInstance } from "vue";
+import { storeToRefs } from "pinia";
 import { getCurrentTab, okToInjectContentScript } from "../../utils";
 
 // Icons
@@ -86,121 +86,110 @@ import IconCheck from "../../../svg/check.svg";
 import IconPlus from "../../../svg/plus.svg";
 import { isFirefox } from "../../browser";
 
-const computedPrototype = [
-  mapState("style", ["style"]),
-  mapState("accounts", ["defaultEncryption"]),
-  mapState("backup", ["driveToken", "dropboxToken", "oneDriveToken"]),
-];
+import { useStyleStore } from "../../store/Style";
+import { useAccountsStore } from "../../store/Accounts";
+import { useBackupStore } from "../../store/Backup";
+import { useMenuStore } from "../../store/Menu";
+import { useCurrentViewStore } from "../../store/CurrentView";
+import { useNotificationStore } from "../../store/Notification";
 
-let computed = {};
+const i18n = getCurrentInstance()!.appContext.config.globalProperties.i18n;
 
-for (const module of computedPrototype) {
-  Object.assign(computed, module);
+const styleStore = useStyleStore();
+const accounts = useAccountsStore();
+const backupStore = useBackupStore();
+const menuStore = useMenuStore();
+const currentViewStore = useCurrentViewStore();
+const notificationStore = useNotificationStore();
+
+const { style } = storeToRefs(styleStore);
+const { defaultEncryption } = storeToRefs(accounts);
+const { driveToken, dropboxToken, oneDriveToken } = storeToRefs(backupStore);
+
+function isPopup() {
+  const params = new URLSearchParams(document.location.search.substring(1));
+  return params.get("popup");
 }
 
-export default Vue.extend({
-  computed,
-  methods: {
-    isPopup() {
-      const params = new URLSearchParams(document.location.search.substring(1));
-      return params.get("popup");
-    },
-    popOut() {
-      let windowType;
-      if (isFirefox) {
-        windowType = "detached_panel";
+function popOut() {
+  let windowType;
+  if (isFirefox) {
+    windowType = "detached_panel";
+  } else {
+    windowType = "panel";
+  }
+  chrome.windows.create({
+    url: chrome.runtime.getURL("view/popup.html?popup=true"),
+    type: windowType as chrome.windows.createTypeEnum,
+    height: window.innerHeight,
+    width: window.innerWidth,
+  });
+  window.close();
+}
+
+function showMenu() {
+  styleStore.showMenu();
+}
+
+function showInfo(page: string) {
+  if (page === "AddMethodPage") {
+    if (menuStore.enforcePassword && !accounts.defaultEncryption) {
+      page = "SetPasswordPage";
+    }
+  }
+  styleStore.showInfo();
+  currentViewStore.changeView(page);
+}
+
+function editEntry() {
+  styleStore.toggleEdit();
+  accounts.stopFilter();
+}
+
+function lock() {
+  chrome.runtime.sendMessage({ action: "lock" }, window.close);
+  return;
+}
+
+async function beginCapture() {
+  if (menuStore.enforcePassword && !accounts.defaultEncryption) {
+    styleStore.showInfo();
+    currentViewStore.changeView("SetPasswordPage");
+    return;
+  }
+
+  if (accounts.currentlyEncrypted) {
+    notificationStore.alert(i18n.phrase_incorrect);
+    return;
+  }
+
+  const tab = await getCurrentTab();
+  // Insert content script
+  if (okToInjectContentScript(tab)) {
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ["/dist/content.js"],
+    });
+    await chrome.scripting.insertCSS({
+      target: { tabId: tab.id },
+      files: ["/css/content.css"],
+    });
+
+    if (tab.url?.startsWith("file:")) {
+      if (await notificationStore.confirm(i18n.capture_local_file_failed)) {
+        window.open("import.html?QrImport", "_blank");
+        return;
+      }
+    }
+
+    chrome.runtime.sendMessage({ action: "updateContentTab", data: tab });
+    chrome.tabs.sendMessage(tab.id, { action: "capture" }, (result) => {
+      if (result !== "beginCapture") {
+        notificationStore.alert(i18n.capture_failed);
       } else {
-        windowType = "panel";
+        window.close();
       }
-      chrome.windows.create({
-        url: chrome.runtime.getURL("view/popup.html?popup=true"),
-        type: windowType as chrome.windows.createTypeEnum,
-        height: window.innerHeight,
-        width: window.innerWidth,
-      });
-      window.close();
-    },
-    showMenu() {
-      this.$store.commit("style/showMenu");
-    },
-    showInfo(page: string) {
-      if (page === "AddMethodPage") {
-        if (
-          this.$store.state.menu.enforcePassword &&
-          !this.$store.state.accounts.defaultEncryption
-        ) {
-          page = "SetPasswordPage";
-        }
-      }
-      this.$store.commit("style/showInfo");
-      this.$store.commit("currentView/changeView", page);
-    },
-    editEntry() {
-      this.$store.commit("style/toggleEdit");
-      this.$store.commit("accounts/stopFilter");
-    },
-    lock() {
-      chrome.runtime.sendMessage({ action: "lock" }, window.close);
-      return;
-    },
-    async beginCapture() {
-      if (
-        this.$store.state.menu.enforcePassword &&
-        !this.$store.state.accounts.defaultEncryption
-      ) {
-        this.$store.commit("style/showInfo");
-        this.$store.commit("currentView/changeView", "SetPasswordPage");
-        return;
-      }
-
-      if (this.$store.getters["accounts/currentlyEncrypted"]) {
-        this.$store.commit("notification/alert", this.i18n.phrase_incorrect);
-        return;
-      }
-
-      const tab = await getCurrentTab();
-      // Insert content script
-      if (okToInjectContentScript(tab)) {
-        await chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          files: ["/dist/content.js"],
-        });
-        await chrome.scripting.insertCSS({
-          target: { tabId: tab.id },
-          files: ["/css/content.css"],
-        });
-
-        if (tab.url?.startsWith("file:")) {
-          if (
-            await this.$store.dispatch(
-              "notification/confirm",
-              this.i18n.capture_local_file_failed,
-            )
-          ) {
-            window.open("import.html?QrImport", "_blank");
-            return;
-          }
-        }
-
-        chrome.runtime.sendMessage({ action: "updateContentTab", data: tab });
-        chrome.tabs.sendMessage(tab.id, { action: "capture" }, (result) => {
-          if (result !== "beginCapture") {
-            this.$store.commit("notification/alert", this.i18n.capture_failed);
-          } else {
-            window.close();
-          }
-        });
-      }
-    },
-  },
-  components: {
-    IconCog,
-    IconLock,
-    IconSync,
-    IconScan,
-    IconPencil,
-    IconCheck,
-    IconPlus,
-  },
-});
+    });
+  }
+}
 </script>

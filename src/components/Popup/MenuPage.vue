@@ -71,8 +71,8 @@
     </div>
   </div>
 </template>
-<script lang="ts">
-import Vue from "vue";
+<script setup lang="ts">
+import { computed, getCurrentInstance } from "vue";
 import { syncTimeWithGoogle } from "../../syncTime";
 
 import IconArrowLeft from "../../../svg/arrow-left.svg";
@@ -90,80 +90,73 @@ import IconClipboardCheck from "../../../svg/clipboard-check.svg";
 import { isFirefox, isSafari } from "../../browser";
 import { UserSettings } from "../../models/settings";
 
-export default Vue.extend({
-  components: {
-    IconArrowLeft,
-    IconInfo,
-    IconExchange,
-    IconDatabase,
-    IconLock,
-    IconSync,
-    IconWrench,
-    IconAdvisor,
-    IconComments,
-    IconGlobe,
-    IconCode,
-    IconClipboardCheck,
-  },
-  computed: {
-    version: function () {
-      return this.$store.state.menu.version;
-    },
-    isSupported: {
-      get(): boolean {
-        return !isSafari;
-      },
-    },
-  },
-  methods: {
-    hideMenu() {
-      this.$store.commit("style/hideMenu");
-    },
-    openHelp() {
-      let url = "https://otp.ee/chromeissues";
+import { useStyleStore } from "../../store/Style";
+import { useMenuStore } from "../../store/Menu";
+import { useAccountsStore } from "../../store/Accounts";
+import { useCurrentViewStore } from "../../store/CurrentView";
+import { useNotificationStore } from "../../store/Notification";
 
-      if (navigator.userAgent.indexOf("Firefox") !== -1) {
-        url = "https://otp.ee/firefoxissues";
-      } else if (navigator.userAgent.indexOf("Edg") !== -1) {
-        url = "https://otp.ee/edgeissues";
+const i18n = getCurrentInstance()!.appContext.config.globalProperties.i18n;
+
+const styleStore = useStyleStore();
+const menuStore = useMenuStore();
+const accounts = useAccountsStore();
+const currentViewStore = useCurrentViewStore();
+const notificationStore = useNotificationStore();
+
+const version = computed(() => menuStore.version);
+const isSupported = computed(() => !isSafari);
+
+function hideMenu() {
+  styleStore.hideMenu();
+}
+
+function openHelp() {
+  let url = "https://otp.ee/chromeissues";
+
+  if (navigator.userAgent.indexOf("Firefox") !== -1) {
+    url = "https://otp.ee/firefoxissues";
+  } else if (navigator.userAgent.indexOf("Edg") !== -1) {
+    url = "https://otp.ee/edgeissues";
+  }
+
+  const feedbackURL = menuStore.feedbackURL;
+  if (typeof feedbackURL === "string" && feedbackURL) {
+    url = feedbackURL;
+  }
+
+  chrome.tabs.create({ url });
+}
+
+function openLink(url: string) {
+  window.open(url, "_blank");
+  return;
+}
+
+function showInfo(tab: string) {
+  if (accounts.currentlyEncrypted) {
+    if (tab === "SetPasswordPage") {
+      notificationStore.alert(i18n.phrase_incorrect);
+      return;
+    }
+  }
+  styleStore.showInfo();
+  currentViewStore.changeView(tab);
+  return;
+}
+
+function syncClock() {
+  chrome.permissions.request(
+    { origins: ["https://www.google.com/"] },
+    async (granted) => {
+      if (granted) {
+        await UserSettings.updateItems();
+        const message = await syncTimeWithGoogle();
+        notificationStore.alert(i18n[message]);
       }
-
-      const feedbackURL = this.$store.state.menu.feedbackURL;
-      if (typeof feedbackURL === "string" && feedbackURL) {
-        url = feedbackURL;
-      }
-
-      chrome.tabs.create({ url });
-    },
-    openLink(url: string) {
-      window.open(url, "_blank");
       return;
     },
-    showInfo(tab: string) {
-      if (this.$store.getters["accounts/currentlyEncrypted"]) {
-        if (tab === "SetPasswordPage") {
-          this.$store.commit("notification/alert", this.i18n.phrase_incorrect);
-          return;
-        }
-      }
-      this.$store.commit("style/showInfo");
-      this.$store.commit("currentView/changeView", tab);
-      return;
-    },
-    syncClock() {
-      chrome.permissions.request(
-        { origins: ["https://www.google.com/"] },
-        async (granted) => {
-          if (granted) {
-            await UserSettings.updateItems();
-            const message = await syncTimeWithGoogle();
-            this.$store.commit("notification/alert", this.i18n[message]);
-          }
-          return;
-        },
-      );
-      return;
-    },
-  },
-});
+  );
+  return;
+}
 </script>

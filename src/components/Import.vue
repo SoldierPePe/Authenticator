@@ -32,48 +32,52 @@
           }}</a>
         </p>
       </div>
-      <component v-bind:is="importType" />
+      <component :is="currentComponent" />
     </div>
     <div v-if="shouldShowPassphrase" class="error_password">
       {{ i18n.import_error_password }}
     </div>
   </div>
 </template>
-<script lang="ts">
-import Vue from "vue";
+<script setup lang="ts">
+import { ref, computed, onMounted, getCurrentInstance } from "vue";
+import type { Component } from "vue";
 import FileImport from "./Import/FileImport.vue";
 import QrImport from "./Import/QrImport.vue";
 import TextImport from "./Import/TextImport.vue";
 
-export default Vue.extend({
-  data: function () {
-    const query = location.search ? location.search.substr(1) : "";
-    const importType = ["FileImport", "QrImport", "TextImport"].includes(query)
-      ? query
-      : "FileImport";
-    return {
-      importType,
-      shouldShowPassphrase: shouldShowPassphrase(this.$entries),
-    };
-  },
-  components: {
-    FileImport,
-    QrImport,
-    TextImport,
-  },
-  mounted() {
-    chrome.runtime.onMessage.addListener((event) => {
-      if (event.action === "stopImport") {
-        this.shouldShowPassphrase = true;
-      }
+const instance = getCurrentInstance()!;
+const entries = instance.appContext.config.globalProperties
+  .$entries as OTPEntryInterface[];
 
-      // https://stackoverflow.com/a/56483156
-      return true;
-    });
-  },
+const components: Record<string, Component> = {
+  FileImport,
+  QrImport,
+  TextImport,
+};
+
+const query = location.search ? location.search.substr(1) : "";
+const importType = ref(
+  ["FileImport", "QrImport", "TextImport"].includes(query)
+    ? query
+    : "FileImport",
+);
+const shouldShowPassphrase = ref(checkShouldShowPassphrase(entries));
+
+const currentComponent = computed(() => components[importType.value]);
+
+onMounted(() => {
+  chrome.runtime.onMessage.addListener((event) => {
+    if (event.action === "stopImport") {
+      shouldShowPassphrase.value = true;
+    }
+
+    // https://stackoverflow.com/a/56483156
+    return true;
+  });
 });
 
-function shouldShowPassphrase(entries: OTPEntryInterface[]) {
+function checkShouldShowPassphrase(entries: OTPEntryInterface[]) {
   for (const entry of entries) {
     if (!entry.secret) {
       return true;

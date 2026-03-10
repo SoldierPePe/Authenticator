@@ -25,29 +25,22 @@
     </div>
   </div>
 </template>
-<script lang="ts">
-import Vue from "vue";
+<script setup lang="ts">
+import { ref, computed } from "vue";
+import { usePermissionsStore } from "../store/Permissions";
 import { Permission } from "../models/permission";
 
-export default Vue.extend({
-  computed: {
-    permissions: function () {
-      return this.$store.state.permissions.permissions.filter(
-        (permission: Permission) => {
-          return this.showAllPermissions || permission.revocable;
-        },
-      );
-    },
-  },
-  data: function () {
-    return {
-      showAllPermissions: false,
-    };
-  },
-  methods: {
-    revoke(permissionId: string) {
-      this.$store.commit("permissions/revokePermission", permissionId);
-    },
-  },
+const permissionsStore = usePermissionsStore();
+
+const showAllPermissions = ref(false);
+
+const permissions = computed(() => {
+  return permissionsStore.permissions.filter((permission: Permission) => {
+    return showAllPermissions.value || permission.revocable;
+  });
 });
+
+function revoke(permissionId: string) {
+  permissionsStore.revokePermission(permissionId);
+}
 </script>

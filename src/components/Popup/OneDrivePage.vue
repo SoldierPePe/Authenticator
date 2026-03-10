@@ -39,90 +39,94 @@
     </div>
   </div>
 </template>
-<script lang="ts">
-import Vue from "vue";
+<script setup lang="ts">
+import { ref, computed, onMounted, getCurrentInstance } from "vue";
 import { OneDrive } from "../../models/backup";
 import { UserSettings } from "../../models/settings";
 
+import { useAccountsStore } from "../../store/Accounts";
+import { useBackupStore } from "../../store/Backup";
+import { useNotificationStore } from "../../store/Notification";
+import { useStyleStore } from "../../store/Style";
+
+const i18n = getCurrentInstance()!.appContext.config.globalProperties.i18n;
+
 const service = "onedrive";
 
-export default Vue.extend({
-  data: function () {
-    return {
-      email: this.i18n.loading,
-    };
-  },
-  created() {
-    UserSettings.updateItems();
-  },
-  computed: {
-    defaultEncryption: function () {
-      return this.$store.state.accounts.defaultEncryption;
-    },
-    isEncrypted: {
-      get(): boolean {
-        if (UserSettings.items.oneDriveEncrypted === null) {
-          this.$store.commit("backup/setEnc", { service, value: true });
-          UserSettings.items.oneDriveEncrypted = true;
-          UserSettings.commitItems();
-          return true;
-        }
-        return this.$store.state.backup.driveEncrypted;
-      },
-      set(newValue: string) {
-        UserSettings.items.driveEncrypted = newValue === "true";
-        UserSettings.commitItems();
-        this.$store.commit("backup/setEnc", { service, value: newValue });
-      },
-    },
-    backupToken: function () {
-      return this.$store.state.backup.oneDriveToken;
-    },
-  },
-  methods: {
-    openLink(url: string) {
-      window.open(url, "_blank");
-      return;
-    },
-    getBackupToken(business?: boolean) {
-      UserSettings.items.oneDriveBusiness = Boolean(business);
+const accounts = useAccountsStore();
+const backupStore = useBackupStore();
+const notificationStore = useNotificationStore();
+const styleStore = useStyleStore();
+
+const email = ref(i18n.loading);
+
+// Run on setup (equivalent of created())
+UserSettings.updateItems();
+
+const defaultEncryption = computed(() => accounts.defaultEncryption);
+
+const isEncrypted = computed({
+  get(): boolean {
+    if (UserSettings.items.oneDriveEncrypted === null) {
+      backupStore.setEnc({ service, value: true });
+      UserSettings.items.oneDriveEncrypted = true;
       UserSettings.commitItems();
-      chrome.runtime.sendMessage({ action: service });
-    },
-    async backupLogout() {
-      UserSettings.items.oneDriveToken = undefined;
-      UserSettings.items.oneDriveRefreshToken = undefined;
-      UserSettings.commitItems();
-      this.$store.commit("backup/setToken", { service, value: false });
-      this.$store.commit("style/hideInfo");
-    },
-    async backupUpload() {
-      const oneDrive = new OneDrive();
-      const response = await oneDrive.upload(
-        this.$store.state.accounts.encryption,
-      );
-      if (response === true) {
-        this.$store.commit("notification/alert", this.i18n.updateSuccess);
-      } else if (UserSettings.items.oneDriveRevoked === true) {
-        this.$store.commit(
-          "notification/alert",
-          chrome.i18n.getMessage("token_revoked", ["OneDrive"]),
-        );
-        UserSettings.removeItem("oneDriveRevoked");
-        this.$store.commit("backup/setToken", { service, value: false });
-      } else {
-        this.$store.commit("notification/alert", this.i18n.updateFailure);
-      }
-    },
-    async getUser() {
-      const oneDrive = new OneDrive();
-      return await oneDrive.getUser();
-    },
-  },
-  mounted: async function () {
-    if (this.backupToken) {
-      this.email = await this.getUser();
+      return true;
     }
+    return backupStore.driveEncrypted;
   },
+  set(newValue: string) {
+    UserSettings.items.driveEncrypted = newValue === "true";
+    UserSettings.commitItems();
+    backupStore.setEnc({ service, value: newValue });
+  },
+});
+
+const backupToken = computed(() => backupStore.oneDriveToken);
+
+function openLink(url: string) {
+  window.open(url, "_blank");
+  return;
+}
+
+function getBackupToken(business?: boolean) {
+  UserSettings.items.oneDriveBusiness = Boolean(business);
+  UserSettings.commitItems();
+  chrome.runtime.sendMessage({ action: service });
+}
+
+async function backupLogout() {
+  UserSettings.items.oneDriveToken = undefined;
+  UserSettings.items.oneDriveRefreshToken = undefined;
+  UserSettings.commitItems();
+  backupStore.setToken({ service, value: false });
+  styleStore.hideInfo();
+}
+
+async function backupUpload() {
+  const oneDrive = new OneDrive();
+  const response = await oneDrive.upload(accounts.encryption);
+  if (response === true) {
+    notificationStore.alert(i18n.updateSuccess);
+  } else if (UserSettings.items.oneDriveRevoked === true) {
+    notificationStore.alert(
+      chrome.i18n.getMessage("token_revoked", ["OneDrive"]),
+    );
+    UserSettings.removeItem("oneDriveRevoked");
+    backupStore.setToken({ service, value: false });
+  } else {
+    notificationStore.alert(i18n.updateFailure);
+  }
+}
+
+async function getUser() {
+  const oneDrive = new OneDrive();
+  return await oneDrive.getUser();
+}
+
+onMounted(async () => {
+  if (backupToken.value) {
+    email.value = await getUser();
+  }
 });
 </script>

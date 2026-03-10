@@ -12,47 +12,57 @@
     }}</a-button-link>
   </div>
 </template>
-<script lang="ts">
-import Vue from "vue";
+<script setup lang="ts">
+import { getCurrentInstance } from "vue";
 import { getCurrentTab, okToInjectContentScript } from "../../utils";
-export default Vue.extend({
-  methods: {
-    showInfo(page: string) {
-      if (this.$store.getters["accounts/currentlyEncrypted"]) {
-        this.$store.commit("notification/alert", this.i18n.phrase_incorrect);
-        return;
-      }
-      this.$store.commit("style/showInfo");
-      this.$store.commit("currentView/changeView", page);
-    },
-    async beginCapture() {
-      if (this.$store.getters["accounts/currentlyEncrypted"]) {
-        this.$store.commit("notification/alert", this.i18n.phrase_incorrect);
-        return;
-      }
 
-      // Insert content script
-      const tab = await getCurrentTab();
-      if (okToInjectContentScript(tab)) {
-        await chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          files: ["/dist/content.js"],
-        });
-        await chrome.scripting.insertCSS({
-          target: { tabId: tab.id },
-          files: ["/css/content.css"],
-        });
+import { useAccountsStore } from "../../store/Accounts";
+import { useStyleStore } from "../../store/Style";
+import { useCurrentViewStore } from "../../store/CurrentView";
+import { useNotificationStore } from "../../store/Notification";
 
-        chrome.runtime.sendMessage({ action: "updateContentTab", data: tab });
-        chrome.tabs.sendMessage(tab.id, { action: "capture" }, (result) => {
-          if (result !== "beginCapture") {
-            this.$store.commit("notification/alert", this.i18n.capture_failed);
-          } else {
-            window.close();
-          }
-        });
+const i18n = getCurrentInstance()!.appContext.config.globalProperties.i18n;
+
+const accounts = useAccountsStore();
+const styleStore = useStyleStore();
+const currentViewStore = useCurrentViewStore();
+const notificationStore = useNotificationStore();
+
+function showInfo(page: string) {
+  if (accounts.currentlyEncrypted) {
+    notificationStore.alert(i18n.phrase_incorrect);
+    return;
+  }
+  styleStore.showInfo();
+  currentViewStore.changeView(page);
+}
+
+async function beginCapture() {
+  if (accounts.currentlyEncrypted) {
+    notificationStore.alert(i18n.phrase_incorrect);
+    return;
+  }
+
+  // Insert content script
+  const tab = await getCurrentTab();
+  if (okToInjectContentScript(tab)) {
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ["/dist/content.js"],
+    });
+    await chrome.scripting.insertCSS({
+      target: { tabId: tab.id },
+      files: ["/css/content.css"],
+    });
+
+    chrome.runtime.sendMessage({ action: "updateContentTab", data: tab });
+    chrome.tabs.sendMessage(tab.id, { action: "capture" }, (result) => {
+      if (result !== "beginCapture") {
+        notificationStore.alert(i18n.capture_failed);
+      } else {
+        window.close();
       }
-    },
-  },
-});
+    });
+  }
+}
 </script>

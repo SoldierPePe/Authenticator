@@ -10,8 +10,8 @@
     <component v-bind:is="info" id="infoContent"></component>
   </div>
 </template>
-<script lang="ts">
-import Vue from "vue";
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
 
 import IconXCircle from "../../../svg/x-circle.svg";
 
@@ -27,30 +27,15 @@ import PreferencesPage from "./PreferencesPage.vue";
 import AdvisorPage from "./AdvisorPage.vue";
 import LoadingPage from "./LoadingPage.vue";
 
-export default Vue.extend({
-  computed: {
-    info: function () {
-      return this.$store.state.currentView.info;
-    },
-  },
-  methods: {
-    hideInfo() {
-      this.$store.commit("style/hideInfo");
-    },
-  },
-  components: {
-    IconXCircle,
-    AddAccountPage,
-    AddMethodPage,
-    SetPasswordPage,
-    EnterPasswordPage,
-    BackupPage,
-    DropboxPage,
-    DrivePage,
-    OneDrivePage,
-    PreferencesPage,
-    AdvisorPage,
-    LoadingPage,
-  },
-});
+import { useCurrentViewStore } from "../../store/CurrentView";
+import { useStyleStore } from "../../store/Style";
+
+const currentViewStore = useCurrentViewStore();
+const styleStore = useStyleStore();
+
+const { info } = storeToRefs(currentViewStore);
+
+function hideInfo() {
+  styleStore.hideInfo();
+}
 </script>

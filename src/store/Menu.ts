@@ -38,24 +38,17 @@ export const useMenuStore = defineStore("menu", {
       this.useAutofill = UserSettings.items.autofill === true;
       this.smartFilter = UserSettings.items.smartFilter === true;
       this.enableContextMenu = UserSettings.items.enableContextMenu === true;
-      this.theme =
-        UserSettings.items.theme || (isSafari ? "flat" : "normal");
+      this.theme = UserSettings.items.theme || (isSafari ? "flat" : "normal");
       this.autolock = Number(UserSettings.items.autolock) || 30;
       this.backupDisabled = await ManagedStorage.get("disableBackup", false);
       this.exportDisabled = await ManagedStorage.get("disableExport", false);
-      this.enforcePassword = await ManagedStorage.get(
-        "enforcePassword",
-        false,
+      this.enforcePassword = await ManagedStorage.get("enforcePassword", false);
+      this.enforceAutolock = await ManagedStorage.get("enforceAutolock", false);
+      this.storageArea = await ManagedStorage.get<"sync" | "local">(
+        "storageArea",
       );
-      this.enforceAutolock = await ManagedStorage.get(
-        "enforceAutolock",
-        false,
-      );
-      this.storageArea =
-        await ManagedStorage.get<"sync" | "local">("storageArea");
       this.feedbackURL = await ManagedStorage.get<string>("feedbackURL");
-      this.passwordPolicy =
-        await ManagedStorage.get<string>("passwordPolicy");
+      this.passwordPolicy = await ManagedStorage.get<string>("passwordPolicy");
       this.passwordPolicyHint =
         await ManagedStorage.get<string>("passwordPolicyHint");
 

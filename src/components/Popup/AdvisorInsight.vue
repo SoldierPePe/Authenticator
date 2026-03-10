@@ -4,28 +4,32 @@
     <p>{{ insight.description }}</p>
     <div class="link">
       <a v-if="insight.link" href="#" v-on:click="openLink(insight.link)">{{
-        this.i18n.learn_more
+        i18n.learn_more
       }}</a>
-      <a href="#" v-on:click="dismiss(insight)">{{ this.i18n.dismiss }}</a>
+      <a href="#" v-on:click="dismiss(insight)">{{ i18n.dismiss }}</a>
     </div>
   </div>
 </template>
-<script lang="ts">
-import Vue from "vue";
+<script setup lang="ts">
+import { getCurrentInstance } from "vue";
 import { AdvisorInsight } from "../../models/advisor";
 
-export default Vue.extend({
-  props: {
-    insight: AdvisorInsight,
-  },
-  methods: {
-    dismiss(insight: AdvisorInsight) {
-      this.$store.commit("advisor/dismissInsight", insight.id);
-    },
-    openLink(url: string) {
-      window.open(url, "_blank");
-      return;
-    },
-  },
-});
+import { useAdvisorStore } from "../../store/Advisor";
+
+const i18n = getCurrentInstance()!.appContext.config.globalProperties.i18n;
+
+const advisorStore = useAdvisorStore();
+
+defineProps<{
+  insight: AdvisorInsight;
+}>();
+
+function dismiss(insight: AdvisorInsight) {
+  advisorStore.dismissInsight(insight.id);
+}
+
+function openLink(url: string) {
+  window.open(url, "_blank");
+  return;
+}
 </script>

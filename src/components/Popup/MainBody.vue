@@ -24,8 +24,7 @@
     </div>
     <!-- Entries -->
     <div
-      v-dragula
-      drake="entryDrake"
+      ref="entriesContainer"
       v-on:keydown.down="focusNextEntry()"
       v-on:keydown.right="focusNextEntry()"
       v-on:keydown.up="focusLastEntry()"
@@ -51,155 +50,150 @@
     </div>
   </div>
 </template>
-<script lang="ts">
-import Vue from "vue";
-import { mapState, mapGetters } from "vuex";
+<script setup lang="ts">
+import { ref, computed, onMounted, watch } from "vue";
+import { storeToRefs } from "pinia";
+import Sortable from "sortablejs";
 import { OTPEntry } from "../../models/otp";
 import { EntryStorage } from "../../models/storage";
 
 import EntryComponent from "./EntryComponent.vue";
-
-// import IconPlus from "../../../svg/plus.svg";
 import IconKey from "../../../svg/key-solid.svg";
 
-const computed: {
-  filter: () => boolean;
-  showSearch: () => boolean;
-  shouldFilter: () => boolean;
-  entries: () => OTPEntry[];
-} = {
-  ...mapState("accounts", ["filter", "showSearch", "initComplete"]),
-  ...mapGetters("accounts", ["shouldFilter", "entries"]),
-};
+import { useAccountsStore } from "../../store/Accounts";
+import { useStyleStore } from "../../store/Style";
 
-export default Vue.extend({
-  data: function () {
-    return {
-      searchText: "",
-    };
-  },
-  computed,
-  methods: {
-    openLink(url: string) {
-      window.open(url, "_blank");
-      return;
-    },
-    isMatchedEntry(entry: OTPEntry) {
-      for (const hash of this.$store.getters["accounts/matchedEntries"]) {
-        if (entry.hash === hash) {
-          return true;
-        }
-      }
-      return false;
-    },
-    isSearchedEntry(entry: OTPEntry) {
-      if (this.searchText === "") {
-        return true;
-      }
-      if (
-        entry.issuer.toLowerCase().includes(this.searchText.toLowerCase()) ||
-        entry.account.toLowerCase().includes(this.searchText.toLowerCase())
-      ) {
-        return true;
-      } else {
-        return false;
-      }
-    },
-    clearFilter() {
-      this.$store.dispatch("accounts/clearFilter");
-    },
-    isEntryVisible(entry: OTPEntry) {
-      return (
-        this.isSearchedEntry(entry) &&
-        (entry.pinned ||
-          !this.shouldFilter ||
-          !this.filter ||
-          this.isMatchedEntry(entry))
-      );
-    },
-    getTabindex(entry: OTPEntry) {
-      const firstEntry = this.entries.find((entry) =>
-        this.isEntryVisible(entry),
-      );
+const accounts = useAccountsStore();
+const styleStore = useStyleStore();
 
-      return entry === firstEntry ? 0 : -1;
-    },
-    findNextEntryIndex(reverse: boolean) {
-      if (document.activeElement?.getAttribute("data-x-role") !== "entry") {
-        return -1;
-      }
+const { filter, showSearch, initComplete } = storeToRefs(accounts);
+const { style } = storeToRefs(styleStore);
 
-      const activeIndex = Array.prototype.indexOf.call(
-        document.querySelectorAll(".entry"),
-        document.activeElement,
-      );
-      if (activeIndex === -1) {
-        return -1;
-      }
+const shouldFilter = computed(() => accounts.shouldFilter);
+const entries = computed(() => accounts.sortedEntries);
+const matchedEntries = computed(() => accounts.matchedEntries);
 
-      // reverse modify origin array, and use slice() to make a clone first
-      const _entries = reverse ? this.entries.slice().reverse() : this.entries;
+const searchText = ref("");
+const entriesContainer = ref<HTMLElement | null>(null);
 
-      let nextIndex = _entries.findIndex(
-        (entry, index) =>
-          index >
-            (reverse ? this.entries.length - 1 - activeIndex : activeIndex) &&
-          this.isEntryVisible(entry),
-      );
+let sortableInstance: Sortable | null = null;
 
-      if (nextIndex === -1) {
-        nextIndex = _entries.findIndex((entry) => this.isEntryVisible(entry));
-      }
-
-      return nextIndex;
-    },
-    focusNextEntry() {
-      const nextIndex = this.findNextEntryIndex(false);
-      document
-        .querySelector<HTMLLinkElement>(`.entry:nth-child(${nextIndex + 1})`)
-        ?.focus();
-    },
-    focusLastEntry() {
-      const lastIndex = this.entries.length - 1 - this.findNextEntryIndex(true);
-      document
-        .querySelector<HTMLLinkElement>(`.entry:nth-child(${lastIndex + 1})`)
-        ?.focus();
-    },
-  },
-  created() {
-    // Don't drag if !isEditing
-    this.$dragula.$service.options("entryDrake", {
-      invalid: () => {
-        if (!this.$store.state.style.style.isEditing) {
-          return true;
-        } else {
-          return false;
+onMounted(() => {
+  if (entriesContainer.value) {
+    sortableInstance = Sortable.create(entriesContainer.value, {
+      handle: ".movehandle",
+      animation: 150,
+      disabled: !style.value.isEditing,
+      onEnd: async (evt) => {
+        if (evt.oldIndex !== undefined && evt.newIndex !== undefined) {
+          accounts.moveCode({ from: evt.oldIndex, to: evt.newIndex });
+          await EntryStorage.set(accounts.entries);
         }
       },
     });
-
-    // Update entry index if dragged
-    this.$dragula.$service.eventBus.$on(
-      "dropModel",
-      async ({
-        dragIndex,
-        dropIndex,
-      }: {
-        dragIndex: number;
-        dropIndex: number;
-      }) => {
-        this.$store.commit("accounts/moveCode", {
-          from: dragIndex,
-          to: dropIndex,
-        });
-        await EntryStorage.set(this.$store.state.accounts.entries);
-      },
-    );
-  },
-  components: {
-    EntryComponent,
-    // IconPlus,
-    IconKey,
-  },
+  }
 });
+
+watch(
+  () => style.value.isEditing,
+  (isEditing) => {
+    if (sortableInstance) {
+      sortableInstance.option("disabled", !isEditing);
+    }
+  },
+);
+
+function openLink(url: string) {
+  window.open(url, "_blank");
+  return;
+}
+
+function isMatchedEntry(entry: OTPEntry) {
+  for (const hash of matchedEntries.value) {
+    if (entry.hash === hash) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isSearchedEntry(entry: OTPEntry) {
+  if (searchText.value === "") {
+    return true;
+  }
+  if (
+    entry.issuer.toLowerCase().includes(searchText.value.toLowerCase()) ||
+    entry.account.toLowerCase().includes(searchText.value.toLowerCase())
+  ) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function clearFilter() {
+  accounts.clearFilter();
+}
+
+function isEntryVisible(entry: OTPEntry) {
+  return (
+    isSearchedEntry(entry) &&
+    (entry.pinned ||
+      !shouldFilter.value ||
+      !filter.value ||
+      isMatchedEntry(entry))
+  );
+}
+
+function getTabindex(entry: OTPEntry) {
+  const firstEntry = entries.value.find((entry: OTPEntry) =>
+    isEntryVisible(entry),
+  );
+
+  return entry === firstEntry ? 0 : -1;
+}
+
+function findNextEntryIndex(reverse: boolean) {
+  if (document.activeElement?.getAttribute("data-x-role") !== "entry") {
+    return -1;
+  }
+
+  const activeIndex = Array.prototype.indexOf.call(
+    document.querySelectorAll(".entry"),
+    document.activeElement,
+  );
+  if (activeIndex === -1) {
+    return -1;
+  }
+
+  // reverse modify origin array, and use slice() to make a clone first
+  const _entries = reverse ? entries.value.slice().reverse() : entries.value;
+
+  let nextIndex = _entries.findIndex(
+    (entry: OTPEntry, index: number) =>
+      index >
+        (reverse ? entries.value.length - 1 - activeIndex : activeIndex) &&
+      isEntryVisible(entry),
+  );
+
+  if (nextIndex === -1) {
+    nextIndex = _entries.findIndex((entry: OTPEntry) => isEntryVisible(entry));
+  }
+
+  return nextIndex;
+}
+
+function focusNextEntry() {
+  const nextIndex = findNextEntryIndex(false);
+  document
+    .querySelector<HTMLLinkElement>(`.entry:nth-child(${nextIndex + 1})`)
+    ?.focus();
+}
+
+function focusLastEntry() {
+  const lastIndex = entries.value.length - 1 - findNextEntryIndex(true);
+  document
+    .querySelector<HTMLLinkElement>(`.entry:nth-child(${lastIndex + 1})`)
+    ?.focus();
+}
 </script>

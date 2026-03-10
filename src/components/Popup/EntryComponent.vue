@@ -84,9 +84,9 @@
     </div>
   </a>
 </template>
-<script lang="ts">
-import Vue from "vue";
-import { mapState } from "vuex";
+<script setup lang="ts">
+import { getCurrentInstance } from "vue";
+import { storeToRefs } from "pinia";
 import QRGen from "qrcode-generator";
 import { OTPEntry, OTPType, CodeState, OTPAlgorithm } from "../../models/otp";
 import { EntryStorage } from "../../models/storage";
@@ -98,164 +98,161 @@ import IconQr from "../../../svg/qrcode.svg";
 import IconBars from "../../../svg/bars.svg";
 import IconPin from "../../../svg/pin.svg";
 
-const computedPrototype = [
-  mapState("accounts", [
-    "OTPType",
-    "sectorStart",
-    "sectorOffset",
-    "second",
-    "encryption",
-  ]),
-  mapState("style", ["style"]),
-  mapState("menu", ["theme"]),
-];
+import { useAccountsStore } from "../../store/Accounts";
+import { useStyleStore } from "../../store/Style";
+import { useMenuStore } from "../../store/Menu";
+import { useQrStore } from "../../store/Qr";
+import { useCurrentViewStore } from "../../store/CurrentView";
+import { useNotificationStore } from "../../store/Notification";
 
-let computed = {};
+const i18n = getCurrentInstance()!.appContext.config.globalProperties.i18n;
 
-for (const module of computedPrototype) {
-  Object.assign(computed, module);
+const accounts = useAccountsStore();
+const styleStore = useStyleStore();
+const menuStore = useMenuStore();
+const qrStore = useQrStore();
+const currentViewStore = useCurrentViewStore();
+const notificationStore = useNotificationStore();
+
+const {
+  OTPType: OTPTypeRef,
+  sectorStart,
+  sectorOffset,
+  second,
+  encryption,
+} = storeToRefs(accounts);
+const { style } = storeToRefs(styleStore);
+const { theme } = storeToRefs(menuStore);
+
+defineProps<{
+  entry: OTPEntry;
+  tabindex: number;
+}>();
+
+function noCopy(code: string) {
+  return (
+    code === CodeState.Encrypted ||
+    code === CodeState.Invalid ||
+    code.startsWith("&bull;")
+  );
 }
 
-export default Vue.extend({
-  computed,
-  props: {
-    entry: OTPEntry,
-    tabindex: Number,
-  },
-  methods: {
-    noCopy(code: string) {
-      return (
-        code === CodeState.Encrypted ||
-        code === CodeState.Invalid ||
-        code.startsWith("&bull;")
-      );
-    },
-    shouldShowQrIcon(entry: OTPEntry) {
-      return (
-        !this.$store.state.menu.exportDisabled &&
-        entry.secret !== null &&
-        entry.type !== OTPType.battle &&
-        entry.type !== OTPType.steam
-      );
-    },
-    showCode(code: string) {
-      if (code === CodeState.Encrypted) {
-        return this.i18n.encrypted;
-      } else if (code === CodeState.Invalid) {
-        return this.i18n.invalid;
-      } else {
-        return code;
-      }
-    },
-    showBulls(entry: OTPEntry) {
-      if (entry.code === CodeState.Encrypted) {
-        return this.i18n.encrypted;
-      } else if (entry.code === CodeState.Invalid) {
-        return this.i18n.invalid;
-      }
+function shouldShowQrIcon(entry: OTPEntry) {
+  return (
+    !menuStore.exportDisabled &&
+    entry.secret !== null &&
+    entry.type !== OTPType.battle &&
+    entry.type !== OTPType.steam
+  );
+}
 
-      if (entry.code.startsWith("&bull;")) {
-        return entry.code;
-      }
+function showCode(code: string) {
+  if (code === CodeState.Encrypted) {
+    return i18n.encrypted;
+  } else if (code === CodeState.Invalid) {
+    return i18n.invalid;
+  } else {
+    return code;
+  }
+}
 
-      return new Array(entry.digits).fill("&bull;").join("");
-    },
-    async removeEntry(entry: OTPEntry) {
-      if (
-        await this.$store.dispatch(
-          "notification/confirm",
-          this.i18n.confirm_delete,
-        )
-      ) {
-        await entry.delete();
-        await this.$store.dispatch("accounts/deleteCode", entry.hash);
-      }
-      return;
-    },
-    async pin(entry: OTPEntry) {
-      this.$store.commit("accounts/pinEntry", entry);
-      await EntryStorage.set(this.$store.state.accounts.entries);
-      const codesEl = document.getElementById("codes") as HTMLDivElement;
-      codesEl.scrollTop = 0;
-    },
-    showQr(entry: OTPEntry) {
-      this.$store.commit("qr/setQr", getQrUrl(entry));
-      this.$store.commit("style/showQr");
-      return;
-    },
-    async nextCode(entry: OTPEntry) {
-      if (this.$store.state.style.hotpDisabled) {
-        return;
-      }
-      this.$store.commit("style/toggleHotpDisabled");
-      await entry.next();
-      setTimeout(() => {
-        this.$store.commit("style/toggleHotpDisabled");
-      }, 3000);
-      return;
-    },
-    async copyCode(entry: OTPEntry) {
-      if (
-        this.$store.state.style.style.isEditing ||
-        entry.code === CodeState.Invalid ||
-        entry.code.startsWith("&bull;")
-      ) {
-        return;
-      }
+function showBulls(entry: OTPEntry) {
+  if (entry.code === CodeState.Encrypted) {
+    return i18n.encrypted;
+  } else if (entry.code === CodeState.Invalid) {
+    return i18n.invalid;
+  }
 
-      if (entry.code === CodeState.Encrypted) {
-        this.$store.commit("style/showInfo", true);
-        this.$store.commit("currentView/changeView", "EnterPasswordPage");
-        return;
-      }
+  if (entry.code.startsWith("&bull;")) {
+    return entry.code;
+  }
 
-      chrome.permissions.request(
-        { permissions: ["clipboardWrite"] },
-        async (granted) => {
-          if (granted) {
-            const codeClipboard = document.getElementById(
-              "codeClipboard",
-            ) as HTMLInputElement;
-            if (!codeClipboard) {
-              return;
-            }
+  return new Array(entry.digits).fill("&bull;").join("");
+}
 
-            if (this.$store.state.menu.useAutofill) {
-              await insertContentScript();
-              const tab = await getCurrentTab();
-              if (tab && tab.id) {
-                chrome.tabs.sendMessage(tab.id, {
-                  action: "pastecode",
-                  code: entry.code,
-                });
-              }
-            }
+async function removeEntry(entry: OTPEntry) {
+  if (await notificationStore.confirm(i18n.confirm_delete)) {
+    await entry.delete();
+    await accounts.deleteCode(entry.hash);
+  }
+  return;
+}
 
-            const lastActiveElement = document.activeElement as HTMLElement;
-            codeClipboard.value = entry.code;
-            codeClipboard.focus();
-            codeClipboard.select();
-            document.execCommand("Copy");
-            lastActiveElement.focus();
-            this.$store.dispatch(
-              "notification/ephermalMessage",
-              this.i18n.copied,
-            );
+async function pin(entry: OTPEntry) {
+  accounts.pinEntry(entry);
+  await EntryStorage.set(accounts.entries);
+  const codesEl = document.getElementById("codes") as HTMLDivElement;
+  codesEl.scrollTop = 0;
+}
+
+function showQr(entry: OTPEntry) {
+  qrStore.setQr(getQrUrl(entry));
+  styleStore.showQr();
+  return;
+}
+
+async function nextCode(entry: OTPEntry) {
+  if (styleStore.style.hotpDisabled) {
+    return;
+  }
+  styleStore.toggleHotpDisabled();
+  await entry.next();
+  setTimeout(() => {
+    styleStore.toggleHotpDisabled();
+  }, 3000);
+  return;
+}
+
+async function copyCode(entry: OTPEntry) {
+  if (
+    styleStore.style.isEditing ||
+    entry.code === CodeState.Invalid ||
+    entry.code.startsWith("&bull;")
+  ) {
+    return;
+  }
+
+  if (entry.code === CodeState.Encrypted) {
+    styleStore.showInfo(true);
+    currentViewStore.changeView("EnterPasswordPage");
+    return;
+  }
+
+  chrome.permissions.request(
+    { permissions: ["clipboardWrite"] },
+    async (granted) => {
+      if (granted) {
+        const codeClipboard = document.getElementById(
+          "codeClipboard",
+        ) as HTMLInputElement;
+        if (!codeClipboard) {
+          return;
+        }
+
+        if (menuStore.useAutofill) {
+          await insertContentScript();
+          const tab = await getCurrentTab();
+          if (tab && tab.id) {
+            chrome.tabs.sendMessage(tab.id, {
+              action: "pastecode",
+              code: entry.code,
+            });
           }
-        },
-      );
+        }
 
-      return;
+        const lastActiveElement = document.activeElement as HTMLElement;
+        codeClipboard.value = entry.code;
+        codeClipboard.focus();
+        codeClipboard.select();
+        document.execCommand("Copy");
+        lastActiveElement.focus();
+        notificationStore.ephermalMessage(i18n.copied);
+      }
     },
-  },
-  components: {
-    IconMinusCircle,
-    IconRedo,
-    IconQr,
-    IconBars,
-    IconPin,
-  },
-});
+  );
+
+  return;
+}
 
 // TODO: move most of this to a models file and reuse for backup stuff
 function getQrUrl(entry: OTPEntry) {

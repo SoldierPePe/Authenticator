@@ -24,30 +24,27 @@
     ></div>
   </div>
 </template>
-<script lang="ts">
-import Vue from "vue";
-import { mapState } from "vuex";
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useNotificationStore } from "../../store/Notification";
 
-export default Vue.extend({
-  computed: mapState("notification", [
-    "message",
-    "messageIdle",
-    "confirmMessage",
-  ]),
-  methods: {
-    closeAlert() {
-      this.$store.commit("notification/closeAlert");
-    },
-    confirmOK() {
-      const confirmEvent = new CustomEvent("confirm", { detail: true });
-      window.dispatchEvent(confirmEvent);
-      return;
-    },
-    confirmCancel() {
-      const confirmEvent = new CustomEvent("confirm", { detail: false });
-      window.dispatchEvent(confirmEvent);
-      return;
-    },
-  },
-});
+const notificationStore = useNotificationStore();
+
+const { message, messageIdle, confirmMessage } = storeToRefs(notificationStore);
+
+function closeAlert() {
+  notificationStore.closeAlert();
+}
+
+function confirmOK() {
+  const confirmEvent = new CustomEvent("confirm", { detail: true });
+  window.dispatchEvent(confirmEvent);
+  return;
+}
+
+function confirmCancel() {
+  const confirmEvent = new CustomEvent("confirm", { detail: false });
+  window.dispatchEvent(confirmEvent);
+  return;
+}
 </script>

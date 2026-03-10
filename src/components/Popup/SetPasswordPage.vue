@@ -27,101 +27,103 @@
     </a-button>
   </div>
 </template>
-<script lang="ts">
-import Vue from "vue";
+<script setup lang="ts">
+import { ref, computed, getCurrentInstance } from "vue";
 import { verifyPasswordUsingKeyID } from "../../models/password";
 
-export default Vue.extend({
-  data: function () {
-    return {
-      phrase: "",
-      currentPhrase: "",
-      confirm: "",
-    };
-  },
-  computed: {
-    enforcePassword: function () {
-      return this.$store.state.menu.enforcePassword;
-    },
-    passwordPolicy: function () {
-      if (!this.$store.state.menu.passwordPolicy) {
-        return null;
-      }
+import { useMenuStore } from "../../store/Menu";
+import { useAccountsStore } from "../../store/Accounts";
+import { useCurrentViewStore } from "../../store/CurrentView";
+import { useNotificationStore } from "../../store/Notification";
+import { useStyleStore } from "../../store/Style";
 
-      try {
-        return new RegExp(this.$store.state.menu.passwordPolicy);
-      } catch {
-        console.warn(
-          "Invalid password policy. The password policy is not a valid regular expression.",
-          this.$store.state.menu.passwordPolicy,
-        );
-        return null;
-      }
-    },
-    passwordPolicyHint: function () {
-      return this.$store.state.menu.passwordPolicyHint;
-    },
-    defaultEncryption: function (): string | undefined {
-      return this.$store.state.accounts.defaultEncryption;
-    },
-  },
-  methods: {
-    async removePassphrase() {
-      this.$store.commit("currentView/changeView", "LoadingPage");
+const i18n = getCurrentInstance()!.appContext.config.globalProperties.i18n;
 
-      if (this.defaultEncryption) {
-        const isCorrectPassword = await verifyPasswordUsingKeyID(
-          this.defaultEncryption,
-          this.currentPhrase,
-        );
-        if (!isCorrectPassword) {
-          this.$store.commit("notification/alert", this.i18n.phrase_not_match);
-          this.$store.commit("currentView/changeView", "SetPasswordPage");
-          return;
-        }
-      }
+const menuStore = useMenuStore();
+const accounts = useAccountsStore();
+const currentViewStore = useCurrentViewStore();
+const notificationStore = useNotificationStore();
+const styleStore = useStyleStore();
 
-      await this.$store.dispatch("accounts/changePassphrase", "");
-      this.$store.commit("notification/alert", this.i18n.updateSuccess);
-      this.$store.commit("style/hideInfo");
-      return;
-    },
-    async changePassphrase() {
-      if (this.phrase === "") {
-        return;
-      }
+const phrase = ref("");
+const currentPhrase = ref("");
+const confirm = ref("");
 
-      if (this.passwordPolicy && !this.passwordPolicy.test(this.phrase)) {
-        const hint =
-          this.passwordPolicyHint || this.i18n.password_policy_default_hint;
-        this.$store.commit("notification/alert", hint);
-        return;
-      }
+const enforcePassword = computed(() => menuStore.enforcePassword);
 
-      if (this.phrase !== this.confirm) {
-        this.$store.commit("notification/alert", this.i18n.phrase_not_match);
-        return;
-      }
+const passwordPolicy = computed(() => {
+  if (!menuStore.passwordPolicy) {
+    return null;
+  }
 
-      this.$store.commit("currentView/changeView", "LoadingPage");
-
-      if (this.defaultEncryption) {
-        const isCorrectPassword = await verifyPasswordUsingKeyID(
-          this.defaultEncryption,
-          this.currentPhrase,
-        );
-        if (!isCorrectPassword) {
-          this.$store.commit("notification/alert", this.i18n.phrase_wrong);
-          this.$store.commit("currentView/changeView", "SetPasswordPage");
-          return;
-        }
-      }
-
-      await this.$store.dispatch("accounts/changePassphrase", this.phrase);
-      this.$store.commit("notification/alert", this.i18n.updateSuccess);
-      this.$store.commit("style/hideInfo");
-      return;
-    },
-  },
+  try {
+    return new RegExp(menuStore.passwordPolicy);
+  } catch {
+    console.warn(
+      "Invalid password policy. The password policy is not a valid regular expression.",
+      menuStore.passwordPolicy,
+    );
+    return null;
+  }
 });
+
+const passwordPolicyHint = computed(() => menuStore.passwordPolicyHint);
+const defaultEncryption = computed(() => accounts.defaultEncryption);
+
+async function removePassphrase() {
+  currentViewStore.changeView("LoadingPage");
+
+  if (defaultEncryption.value) {
+    const isCorrectPassword = await verifyPasswordUsingKeyID(
+      defaultEncryption.value,
+      currentPhrase.value,
+    );
+    if (!isCorrectPassword) {
+      notificationStore.alert(i18n.phrase_not_match);
+      currentViewStore.changeView("SetPasswordPage");
+      return;
+    }
+  }
+
+  await accounts.changePassphrase("");
+  notificationStore.alert(i18n.updateSuccess);
+  styleStore.hideInfo();
+  return;
+}
+
+async function changePassphrase() {
+  if (phrase.value === "") {
+    return;
+  }
+
+  if (passwordPolicy.value && !passwordPolicy.value.test(phrase.value)) {
+    const hint = passwordPolicyHint.value || i18n.password_policy_default_hint;
+    notificationStore.alert(hint);
+    return;
+  }
+
+  if (phrase.value !== confirm.value) {
+    notificationStore.alert(i18n.phrase_not_match);
+    return;
+  }
+
+  currentViewStore.changeView("LoadingPage");
+
+  if (defaultEncryption.value) {
+    const isCorrectPassword = await verifyPasswordUsingKeyID(
+      defaultEncryption.value,
+      currentPhrase.value,
+    );
+    if (!isCorrectPassword) {
+      notificationStore.alert(i18n.phrase_wrong);
+      currentViewStore.changeView("SetPasswordPage");
+      return;
+    }
+  }
+
+  await accounts.changePassphrase(phrase.value);
+  notificationStore.alert(i18n.updateSuccess);
+  styleStore.hideInfo();
+  return;
+}
 </script>

@@ -1,4 +1,4 @@
-import Vue from "vue";
+import { createApp } from "vue";
 import ImportView from "./components/Import.vue";
 import CommonComponents from "./components/common/index";
 import { loadI18nMessages } from "./store/i18n";
@@ -9,12 +9,18 @@ import { getOTPAuthPerLineFromOPTAuthMigration } from "./models/migration";
 import * as CryptoJS from "crypto-js";
 
 async function init() {
-  // i18n
-  Vue.prototype.i18n = await loadI18nMessages();
+  // Load i18n messages
+  const i18n = await loadI18nMessages();
+
+  // Create app
+  const app = createApp(ImportView);
+
+  // Add globals
+  app.config.globalProperties.i18n = i18n;
 
   // Load common components globally
   for (const component of CommonComponents) {
-    Vue.component(component.name, component.component);
+    app.component(component.name, component.component);
   }
 
   // Load entries to global
@@ -31,16 +37,14 @@ async function init() {
     }
   }
 
-  Vue.prototype.$entries = entries;
-  Vue.prototype.$encryption = encryption;
+  app.config.globalProperties.$entries = entries;
+  app.config.globalProperties.$encryption = encryption;
 
-  const instance = new Vue({
-    render: (h) => h(ImportView),
-  }).$mount("#import");
+  app.mount("#import");
 
   // Set title
   try {
-    document.title = instance.i18n.extName;
+    document.title = i18n.extName;
   } catch (e) {
     console.error(e);
   }

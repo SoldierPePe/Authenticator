@@ -13,8 +13,7 @@ import { useStyleStore } from "./Style";
 const LegacyEncryption = "LegacyEncryption";
 
 async function getCachedKeyInfo() {
-  const { cachedPassphrase, cachedKeyId } =
-    await chrome.storage.session.get();
+  const { cachedPassphrase, cachedKeyId } = await chrome.storage.session.get();
 
   return { cachedPassphrase, cachedKeyId };
 }
@@ -139,11 +138,7 @@ export const useAccountsStore = defineStore("accounts", {
         }
       }
 
-      if (
-        !this.sectorStart &&
-        this.entries.length > 0 &&
-        !currentlyEncrypted
-      ) {
+      if (!this.sectorStart && this.entries.length > 0 && !currentlyEncrypted) {
         this.sectorStart = true;
         this.sectorOffset = -second;
       }
@@ -162,11 +157,7 @@ export const useAccountsStore = defineStore("accounts", {
       this.entries = newCodes;
     },
     moveCode(opts: { from: number; to: number }) {
-      this.entries.splice(
-        opts.to,
-        0,
-        this.entries.splice(opts.from, 1)[0],
-      );
+      this.entries.splice(opts.to, 0, this.entries.splice(opts.from, 1)[0]);
 
       for (let i = 0; i < this.entries.length; i++) {
         if (this.entries[i].index !== i) {
@@ -334,10 +325,7 @@ export const useAccountsStore = defineStore("accounts", {
           // TODO: there is a serious bug here. If two keys have the same password,
           // then only one of them will be used for decryption.
           if (isCorrectPassword) {
-            this.encryption.set(
-              key.id,
-              new Encryption(possibleHash, key.id),
-            );
+            this.encryption.set(key.id, new Encryption(possibleHash, key.id));
             this.defaultEncryption = key.id;
 
             saltedHash = possibleHash;
@@ -426,10 +414,7 @@ export const useAccountsStore = defineStore("accounts", {
         );
       }
       for (const entry of this.entries) {
-        if (
-          entry.encryption?.getEncryptionKeyId() !==
-          this.defaultEncryption
-        ) {
+        if (entry.encryption?.getEncryptionKeyId() !== this.defaultEncryption) {
           await entry.changeEncryption(defaultEnc);
           needUpdateStorage = true;
         }
@@ -470,9 +455,7 @@ export const useAccountsStore = defineStore("accounts", {
         const removeKeys: string[] = [];
         const keys = await BrowserStorage.getKeys();
         if (isOldKey(keys)) {
-          throw new Error(
-            "OldKey still being used. This should never happen!",
-          );
+          throw new Error("OldKey still being used. This should never happen!");
         }
         const key: Key = {
           dataType: DataType.Key,
@@ -496,10 +479,7 @@ export const useAccountsStore = defineStore("accounts", {
           }
 
           if (entry.encryption?.getEncryptionKeyId()) {
-            linkedKeys.set(
-              entry.encryption.getEncryptionKeyId(),
-              undefined,
-            );
+            linkedKeys.set(entry.encryption.getEncryptionKeyId(), undefined);
           }
         }
 
@@ -520,10 +500,7 @@ export const useAccountsStore = defineStore("accounts", {
           await BrowserStorage.remove(removeKeys);
         }
 
-        this.encryption.set(
-          key.id,
-          new Encryption(saltedHash, key.id),
-        );
+        this.encryption.set(key.id, new Encryption(saltedHash, key.id));
         this.defaultEncryption = key.id;
 
         await this.updateEntries();
