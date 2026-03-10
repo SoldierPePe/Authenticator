@@ -1,7 +1,7 @@
 {
-  "name": "authenticator-extension",
+  "name": "tauth-extension",
   "version": "0.1.0",
-  "description": "Authenticator generates 2-Step Verification codes in your browser.",
+  "description": "TAuth generates 2-Step Verification codes in your browser.",
   "type": "module",
   "scripts": {
     "compile": "bash scripts/build.sh firefox",
@@ -17,7 +17,7 @@
     "type": "git",
     "url": "git+https://github.com/Authenticator-Extension/Authenticator.git"
   },
-  "author": "Authenticator Extension",
+  "author": "TAuth",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/Authenticator-Extension/Authenticator/issues"

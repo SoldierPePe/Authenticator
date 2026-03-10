@@ -1,14 +1,14 @@
 {
   "extName": {
-    "message": "Authenticator",
+    "message": "TAuth",
     "description": "Extension Name."
   },
   "extShortName": {
-    "message": "Authenticator",
+    "message": "TAuth",
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Authenticator generates two-factor authentication codes in your browser.",
+    "message": "TAuth generates two-factor authentication codes in your browser.",
     "description": "Extension Description."
   },
   "added": {
@@ -120,10 +120,10 @@
     "description": "Message that user is required to acknowledge before clearing all data."
   },
   "delete_all": {
-    "message": "Reset Authenticator"
+    "message": "Reset TAuth"
   },
   "delete_all_warning": {
-    "message": "This will delete all of your data and completely reset Authenticator. You will not be able to recover any deleted data! You should consider saving a backup before resetting Authenticator."
+    "message": "This will delete all of your data and completely reset TAuth. You will not be able to recover any deleted data! You should consider saving a backup before resetting TAuth."
   },
   "security_warning": {
     "message": "This password will be used to encrypt your accounts. No one can help you if you forget the password.",
@@ -489,7 +489,7 @@
     "message": "Grants write-only access to the clipboard to copy codes to clipboard when you click on the account."
   },
   "permission_context_menus": {
-    "message": "Adds Authenticator to context menu."
+    "message": "Adds TAuth to context menu."
   },
   "permission_sync_clock": {
     "message": "Allows clock sync with Google."

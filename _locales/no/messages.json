@@ -4,11 +4,11 @@
     "description": "Extension Name."
   },
   "extShortName": {
-    "message": "Authenticator",
+    "message": "TAuth",
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Authenticator genererer to-faktor autentiseringskoder i nettleseren din.",
+    "message": "TAuth genererer to-faktor autentiseringskoder i nettleseren din.",
     "description": "Extension Description."
   },
   "added": {

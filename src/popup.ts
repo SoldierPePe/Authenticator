@@ -71,7 +71,7 @@ async function init() {
         this.$store.commit("accounts/updateCodes");
       }, 1000);
     },
-  }).$mount("#authenticator");
+  }).$mount("#tauth");
 
   // Prompt for password if needed
   if (instance.$store.state.accounts.shouldShowPassphrase) {
