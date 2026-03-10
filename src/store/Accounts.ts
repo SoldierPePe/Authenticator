@@ -18,8 +18,8 @@ export class Accounts implements Module {
         cachedKeyInfo.cachedKeyId,
         new Encryption(
           cachedKeyInfo.cachedPassphrase,
-          cachedKeyInfo.cachedKeyId
-        )
+          cachedKeyInfo.cachedKeyId,
+        ),
       );
     }
     const shouldShowPassphrase = await EntryStorage.hasEncryptionKey();
@@ -50,7 +50,7 @@ export class Accounts implements Module {
       getters: {
         shouldFilter(
           state: AccountsState,
-          getters: { matchedEntries: string[] }
+          getters: { matchedEntries: string[] },
         ) {
           return (
             UserSettings.items.smartFilter === true &&
@@ -71,7 +71,7 @@ export class Accounts implements Module {
         entries(state: AccountsState) {
           const pinnedEntries = state.entries.filter((entry) => entry.pinned);
           const unpinnedEntries = state.entries.filter(
-            (entry) => !entry.pinned
+            (entry) => !entry.pinned,
           );
           return [...pinnedEntries, ...unpinnedEntries];
         },
@@ -141,7 +141,7 @@ export class Accounts implements Module {
           state.entries.splice(
             opts.to,
             0,
-            state.entries.splice(opts.from, 1)[0]
+            state.entries.splice(opts.from, 1)[0],
           );
 
           for (let i = 0; i < state.entries.length; i++) {
@@ -155,7 +155,7 @@ export class Accounts implements Module {
         },
         updateExport(
           state: AccountsState,
-          exportData: { [k: string]: OTPEntryInterface }
+          exportData: { [k: string]: OTPEntryInterface },
         ) {
           state.exportData = exportData;
         },
@@ -164,7 +164,7 @@ export class Accounts implements Module {
           data: {
             entries: { [k: string]: OTPEntryInterface };
             keys: Key[] | OldKey;
-          }
+          },
         ) {
           if (isOldKey(data.keys)) {
             return;
@@ -186,17 +186,17 @@ export class Accounts implements Module {
       actions: {
         deleteCode: async (
           state: ActionContext<AccountsState, object>,
-          hash: string
+          hash: string,
         ) => {
           const index = state.state.entries.findIndex(
-            (entry) => entry.hash === hash
+            (entry) => entry.hash === hash,
           );
           if (index > -1) {
             state.state.entries.splice(index, 1);
           }
           state.commit(
             "updateExport",
-            await EntryStorage.getExport(state.state.entries)
+            await EntryStorage.getExport(state.state.entries),
           );
           state.commit("updateEncExport", {
             entries: await EntryStorage.getExport(state.state.entries, true),
@@ -205,12 +205,12 @@ export class Accounts implements Module {
         },
         addCode: async (
           state: ActionContext<AccountsState, object>,
-          entry: OTPEntryInterface
+          entry: OTPEntryInterface,
         ) => {
           state.state.entries.unshift(entry);
           state.commit(
             "updateExport",
-            await EntryStorage.getExport(state.state.entries)
+            await EntryStorage.getExport(state.state.entries),
           );
           state.commit("updateEncExport", {
             entries: await EntryStorage.getExport(state.state.entries, true),
@@ -219,7 +219,7 @@ export class Accounts implements Module {
         },
         applyPassphrase: async (
           state: ActionContext<AccountsState, object>,
-          password: string
+          password: string,
         ) => {
           if (!password) {
             return;
@@ -250,7 +250,7 @@ export class Accounts implements Module {
                   // @ts-expect-error - bad typings
                   iframe.contentWindow.postMessage(message, "*");
                 }
-              }
+              },
             );
 
             if (!isCorrectPassword) {
@@ -263,7 +263,7 @@ export class Accounts implements Module {
 
             state.state.encryption.set(
               LegacyEncryption,
-              new Encryption(key, LegacyEncryption)
+              new Encryption(key, LegacyEncryption),
             );
 
             migrationNeeded = true;
@@ -272,7 +272,7 @@ export class Accounts implements Module {
             // verify current password
             state.state.encryption.set(
               LegacyEncryption,
-              new Encryption(password, LegacyEncryption)
+              new Encryption(password, LegacyEncryption),
             );
             await state.dispatch("updateEntries");
 
@@ -304,7 +304,7 @@ export class Accounts implements Module {
                     // @ts-expect-error bad typings
                     iframe.contentWindow.postMessage(message, "*");
                   }
-                }
+                },
               );
 
               // https://passlib.readthedocs.io/en/stable/lib/passlib.hash.argon2.html#format-algorithm
@@ -330,7 +330,7 @@ export class Accounts implements Module {
                     // @ts-expect-error bad typings
                     iframe.contentWindow.postMessage(message, "*");
                   }
-                }
+                },
               );
 
               // TODO: there is a serious bug here. If two keys have the same password,
@@ -338,7 +338,7 @@ export class Accounts implements Module {
               if (isCorrectPassword) {
                 state.state.encryption.set(
                   key.id,
-                  new Encryption(possibleHash, key.id)
+                  new Encryption(possibleHash, key.id),
                 );
                 state.state.defaultEncryption = key.id;
 
@@ -397,7 +397,7 @@ export class Accounts implements Module {
               // if not uuidv4 regen
               if (
                 /[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}/i.test(
-                  entry.hash
+                  entry.hash,
                 )
               ) {
                 entry.genUUID();
@@ -424,11 +424,11 @@ export class Accounts implements Module {
           // Browser sync can cause unencrypted entries to show up.
           let needUpdateStorage = false;
           const defaultEncryption = state.state.encryption.get(
-            state.state.defaultEncryption
+            state.state.defaultEncryption,
           );
           if (!defaultEncryption) {
             throw new Error(
-              "defaultEncryption is empty, this should never happen!"
+              "defaultEncryption is empty, this should never happen!",
             );
           }
           for (const entry of state.state.entries) {
@@ -459,7 +459,7 @@ export class Accounts implements Module {
         },
         changePassphrase: async (
           state: ActionContext<AccountsState, object>,
-          password: string
+          password: string,
         ) => {
           if (password) {
             // The hash of the user's password is used as the encryption key for user data.
@@ -480,7 +480,7 @@ export class Accounts implements Module {
             const keys = await BrowserStorage.getKeys();
             if (isOldKey(keys)) {
               throw new Error(
-                "OldKey still being used. This should never happen!"
+                "OldKey still being used. This should never happen!",
               );
             }
             const key: Key = {
@@ -497,7 +497,7 @@ export class Accounts implements Module {
               // if not uuidv4 regen
               if (
                 /[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}/i.test(
-                  entry.hash
+                  entry.hash,
                 )
               ) {
                 removeKeys.push(entry.hash);
@@ -507,7 +507,7 @@ export class Accounts implements Module {
               if (entry.encryption?.getEncryptionKeyId()) {
                 linkedKeys.set(
                   entry.encryption.getEncryptionKeyId(),
-                  undefined
+                  undefined,
                 );
               }
             }
@@ -531,7 +531,7 @@ export class Accounts implements Module {
 
             state.state.encryption.set(
               key.id,
-              new Encryption(saltedHash, key.id)
+              new Encryption(saltedHash, key.id),
             );
             state.state.defaultEncryption = key.id;
 
@@ -579,9 +579,8 @@ export class Accounts implements Module {
           for (const entry of entries) {
             // LegacyEncryption indicates that we need to use backwards compatibility logic
             if (entry.encSecret) {
-              const legacyEncryption = state.state.encryption.get(
-                LegacyEncryption
-              );
+              const legacyEncryption =
+                state.state.encryption.get(LegacyEncryption);
               if (legacyEncryption) {
                 await entry.applyEncryption(legacyEncryption);
               }
@@ -597,7 +596,7 @@ export class Accounts implements Module {
           state.commit("updateCodes");
           state.commit(
             "updateExport",
-            await EntryStorage.getExport(state.state.entries)
+            await EntryStorage.getExport(state.state.entries),
           );
           state.commit("updateEncExport", {
             entries: await EntryStorage.getExport(state.state.entries, true),
@@ -614,7 +613,7 @@ export class Accounts implements Module {
         },
         migrateStorage: async (
           state: ActionContext<AccountsState, object>,
-          newStorageLocation: string
+          newStorageLocation: string,
         ) => {
           // sync => local
           if (
@@ -628,7 +627,7 @@ export class Accounts implements Module {
             // Double check if data was set
             if (
               Object.keys(syncData).every(
-                (value) => Object.keys(localData).indexOf(value) >= 0
+                (value) => Object.keys(localData).indexOf(value) >= 0,
               )
             ) {
               UserSettings.items.storageLocation = StorageLocation.Local;
@@ -655,7 +654,7 @@ export class Accounts implements Module {
             // Double check if data was set
             if (
               Object.keys(localData).every(
-                (value) => Object.keys(syncData).indexOf(value) >= 0
+                (value) => Object.keys(syncData).indexOf(value) >= 0,
               )
             ) {
               UserSettings.items.storageLocation = StorageLocation.Sync;
@@ -676,10 +675,8 @@ export class Accounts implements Module {
   }
 
   private async getCachedKeyInfo() {
-    const {
-      cachedPassphrase,
-      cachedKeyId,
-    } = await chrome.storage.session.get();
+    const { cachedPassphrase, cachedKeyId } =
+      await chrome.storage.session.get();
 
     return { cachedPassphrase, cachedKeyId };
   }

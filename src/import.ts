@@ -21,7 +21,7 @@ async function init() {
   const cachedSecrets = await getCachedSecrets();
   const encryption = new Encryption(
     cachedSecrets.cachedPassphrase,
-    cachedSecrets.cachedKeyId
+    cachedSecrets.cachedKeyId,
   );
   const entries = await EntryStorage.get();
 
@@ -56,7 +56,7 @@ async function getCachedSecrets() {
 
 export async function decryptBackupData(
   backupData: { [hash: string]: OTPStorage | Key },
-  passphrase: string | null
+  passphrase: string | null,
 ) {
   const decryptedBackupData: { [hash: string]: RawOTPStorage } = {};
   const keys: Map<string, string | null> = new Map();
@@ -80,8 +80,8 @@ export async function decryptBackupData(
           await findAndUnlockKey(
             backupData,
             unknownStorageItem.keyId,
-            passphrase
-          )
+            passphrase,
+          ),
         );
       }
       const decryptKey = keys.get(unknownStorageItem.keyId);
@@ -94,8 +94,8 @@ export async function decryptBackupData(
         ...unknownStorageItem,
         ...JSON.parse(
           CryptoJS.AES.decrypt(unknownStorageItem.data, decryptKey).toString(
-            CryptoJS.enc.Utf8
-          )
+            CryptoJS.enc.Utf8,
+          ),
         ),
         encrypted: false,
       };
@@ -112,7 +112,7 @@ export async function decryptBackupData(
       try {
         storageItem.secret = CryptoJS.AES.decrypt(
           storageItem.secret,
-          passphrase
+          passphrase,
         ).toString(CryptoJS.enc.Utf8);
         storageItem.encrypted = false;
       } catch (error) {
@@ -132,7 +132,7 @@ export async function decryptBackupData(
 async function findAndUnlockKey(
   importData: { [key: string]: OTPStorage | Key },
   keyId: string,
-  password: string
+  password: string,
 ): Promise<string | null> {
   if (!(keyId in importData)) {
     return null;
@@ -182,7 +182,7 @@ async function findAndUnlockKey(
         // @ts-expect-error bad typings
         iframe.contentWindow.postMessage(message, "*");
       }
-    }
+    },
   );
 
   if (!isCorrectPassword) {
@@ -252,9 +252,7 @@ export async function getEntryDataFromOTPAuthPerLine(importCode: string) {
         } /* else if (parameter[0].toLowerCase() === "counter") {
           let counter = Number(parameter[1]);
           counter = isNaN(counter) || counter < 0 ? 0 : counter;
-        } */ else if (
-          parameter[0].toLowerCase() === "period"
-        ) {
+        } */ else if (parameter[0].toLowerCase() === "period") {
           period = Number(parameter[1]);
           period =
             isNaN(period) || period < 0 || period > 60 || 60 % period !== 0

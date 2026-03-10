@@ -21,7 +21,7 @@ export class Encryption implements EncryptionInterface {
     try {
       const decryptedSecret = CryptoJS.AES.decrypt(
         secret,
-        this.password
+        this.password,
       ).toString(CryptoJS.enc.Utf8);
 
       if (!decryptedSecret) {
@@ -56,7 +56,7 @@ export class Encryption implements EncryptionInterface {
 
       const decryptedData = CryptoJS.AES.decrypt(
         entry.encData,
-        this.password
+        this.password,
       ).toString(CryptoJS.enc.Utf8);
 
       if (!decryptedData) {

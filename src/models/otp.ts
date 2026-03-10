@@ -88,7 +88,7 @@ export class OTPEntry implements OTPEntryInterface {
           hash: string;
           index: number;
         },
-    encryption?: EncryptionInterface
+    encryption?: EncryptionInterface,
   ) {
     this.encryption = encryption;
     this.index = entry.index;
@@ -210,7 +210,7 @@ export class OTPEntry implements OTPEntryInterface {
       console.warn(
         "Decrypt successful, but hash mismatch!",
         this.hash,
-        decryptedData.hash
+        decryptedData.hash,
       );
     }
 
@@ -280,7 +280,7 @@ export class OTPEntry implements OTPEntryInterface {
           this.period,
           this.digits,
           this.algorithm,
-          offset
+          offset,
         );
       } catch (error) {
         this.code = CodeState.Invalid;

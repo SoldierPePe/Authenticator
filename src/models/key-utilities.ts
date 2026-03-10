@@ -97,7 +97,7 @@ export class KeyUtilities {
   }
 
   private static cryptoJsWordArrayToUint8Array(
-    wordArray: CryptoJS.lib.WordArray
+    wordArray: CryptoJS.lib.WordArray,
   ) {
     const l = wordArray.sigBytes;
     const words = wordArray.words;
@@ -125,7 +125,7 @@ export class KeyUtilities {
     period: number,
     len?: number,
     algorithm?: OTPAlgorithm,
-    clockOffset?: number
+    clockOffset?: number,
   ) {
     secret = secret.replace(/\s/g, "");
     if (!len) {
@@ -185,13 +185,13 @@ export class KeyUtilities {
       case OTPAlgorithm.SHA256:
         hmacObj = CryptoJS.HmacSHA256(
           CryptoJS.enc.Hex.parse(time),
-          CryptoJS.enc.Hex.parse(key)
+          CryptoJS.enc.Hex.parse(key),
         );
         break;
       case OTPAlgorithm.SHA512:
         hmacObj = CryptoJS.HmacSHA512(
           CryptoJS.enc.Hex.parse(time),
-          CryptoJS.enc.Hex.parse(key)
+          CryptoJS.enc.Hex.parse(key),
         );
         break;
       case OTPAlgorithm.GOST3411_2012_256:
@@ -206,14 +206,14 @@ export class KeyUtilities {
         hmacObj = CryptoJS.lib.WordArray.create(
           gostCipher.sign(
             this.cryptoJsWordArrayToUint8Array(CryptoJS.enc.Hex.parse(key)),
-            this.cryptoJsWordArrayToUint8Array(CryptoJS.enc.Hex.parse(time))
-          )
+            this.cryptoJsWordArrayToUint8Array(CryptoJS.enc.Hex.parse(time)),
+          ),
         );
         break;
       default:
         hmacObj = CryptoJS.HmacSHA1(
           CryptoJS.enc.Hex.parse(time),
-          CryptoJS.enc.Hex.parse(key)
+          CryptoJS.enc.Hex.parse(key),
         );
         break;
     }

@@ -35,7 +35,7 @@ export default Vue.extend({
       return this.$store.state.permissions.permissions.filter(
         (permission: Permission) => {
           return this.showAllPermissions || permission.revocable;
-        }
+        },
       );
     },
   },

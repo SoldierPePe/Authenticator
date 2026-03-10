@@ -146,10 +146,8 @@ async function getTotp(text: string, silent = false) {
         account = label;
       }
       const parameters = parameterPart.split("&");
-      const {
-        cachedPassphrase,
-        cachedKeyId,
-      } = await chrome.storage.session.get();
+      const { cachedPassphrase, cachedKeyId } =
+        await chrome.storage.session.get();
       parameters.forEach((item) => {
         const parameter = item.split("=");
         if (parameter[0].toLowerCase() === "secret") {
@@ -255,7 +253,7 @@ function getBackupToken(service: string) {
         UserSettings.commitItems();
         chrome.runtime.sendMessage({ action: "drivetoken", value });
         return true;
-      }
+      },
     );
   } else {
     let authUrl = "";
@@ -345,7 +343,7 @@ function getBackupToken(service: string) {
                       Accept: "application/json",
                       "Content-Type": "application/x-www-form-urlencoded",
                     },
-                  }
+                  },
                 );
 
                 try {
@@ -379,7 +377,7 @@ function getBackupToken(service: string) {
                       Accept: "application/json",
                       "Content-Type": "application/x-www-form-urlencoded",
                     },
-                  }
+                  },
                 );
 
                 try {
@@ -405,7 +403,7 @@ function getBackupToken(service: string) {
         }
 
         return;
-      }
+      },
     );
   }
 }
@@ -527,7 +525,7 @@ chrome.commands.onCommand.addListener(async (command: string) => {
 
 async function setAutolock() {
   const enforcedAutolock = Number(
-    await ManagedStorage.get("enforceAutolock", false)
+    await ManagedStorage.get("enforceAutolock", false),
   );
 
   if (enforcedAutolock && enforcedAutolock > 0) {
@@ -590,7 +588,7 @@ async function updateContextMenu() {
           chrome.contextMenus.removeAll();
         }
       }
-    }
+    },
   );
 }
 

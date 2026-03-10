@@ -28,7 +28,7 @@ else
     ./node_modules/.bin/prettier --check $STYLEFILES --write
 fi
 
-./node_modules/.bin/eslint . --ext .js,.ts
+./node_modules/.bin/eslint .
 
 if ! [[ $CREDS =~ $CREDREGEX ]] ; then
     if [[ $PLATFORM = "prod" ]]; then
@@ -51,13 +51,27 @@ if ! [[ $REMOTE = *"https://github.com/Authenticator-Extension/Authenticator.git
 fi
 
 echo "Compiling..."
+
+ENTRIES="argon background content popup import options qrdebug permissions"
+
+viteBuildEntry () {
+    VITE_ENTRY=$1 ./node_modules/.bin/vite build --mode $2
+}
+
 if [[ $PLATFORM = "prod" ]]; then
-    ./node_modules/webpack-cli/bin/cli.js --config webpack.prod.js
+    for entry in $ENTRIES; do
+        viteBuildEntry $entry production
+    done
 elif [[ $PLATFORM = "test" ]]; then
-    ./node_modules/webpack-cli/bin/cli.js --config webpack.dev.js
+    for entry in $ENTRIES; do
+        viteBuildEntry $entry test
+    done
+    viteBuildEntry test test
     ./node_modules/.bin/tsc --target ES2015 --esModuleInterop --moduleResolution nodenext --module commonjs scripts/test-runner.ts
 else
-    ./node_modules/webpack-cli/bin/cli.js
+    for entry in $ENTRIES; do
+        viteBuildEntry $entry development
+    done
 fi
 ./node_modules/sass/sass.js sass:css
 cp ./sass/DroidSansMono.woff2 ./sass/mocha.css ./css/

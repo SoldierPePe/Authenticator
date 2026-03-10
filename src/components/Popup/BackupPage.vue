@@ -115,7 +115,7 @@ export default Vue.extend({
               this.$store.commit("style/showInfo");
               this.$store.commit("currentView/changeView", tab);
             }
-          }
+          },
         );
         return;
       } else if (tab === "DrivePage") {
@@ -132,7 +132,7 @@ export default Vue.extend({
               this.$store.commit("currentView/changeView", tab);
             }
             return;
-          }
+          },
         );
         return;
       } else if (tab === "OneDrivePage") {
@@ -149,7 +149,7 @@ export default Vue.extend({
               this.$store.commit("currentView/changeView", tab);
             }
             return;
-          }
+          },
         );
         return;
       }
@@ -187,7 +187,7 @@ function hasUnsupportedAccounts(exportData: { [h: string]: RawOTPStorage }) {
 
 function getBackupFile(
   entryData: { [hash: string]: RawOTPStorage },
-  key?: Object
+  key?: Object,
 ) {
   if (key) {
     Object.assign(entryData, { key: key });

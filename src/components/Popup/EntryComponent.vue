@@ -164,7 +164,7 @@ export default Vue.extend({
       if (
         await this.$store.dispatch(
           "notification/confirm",
-          this.i18n.confirm_delete
+          this.i18n.confirm_delete,
         )
       ) {
         await entry.delete();
@@ -214,7 +214,7 @@ export default Vue.extend({
         async (granted) => {
           if (granted) {
             const codeClipboard = document.getElementById(
-              "codeClipboard"
+              "codeClipboard",
             ) as HTMLInputElement;
             if (!codeClipboard) {
               return;
@@ -239,10 +239,10 @@ export default Vue.extend({
             lastActiveElement.focus();
             this.$store.dispatch(
               "notification/ephermalMessage",
-              this.i18n.copied
+              this.i18n.copied,
             );
           }
-        }
+        },
       );
 
       return;
@@ -266,8 +266,8 @@ function getQrUrl(entry: OTPEntry) {
     entry.type === OTPType.hex
       ? OTPType[OTPType.totp]
       : entry.type === OTPType.hhex
-      ? OTPType[OTPType.hotp]
-      : OTPType[entry.type];
+        ? OTPType[OTPType.hotp]
+        : OTPType[entry.type];
   const otpauth =
     "otpauth://" +
     type +
