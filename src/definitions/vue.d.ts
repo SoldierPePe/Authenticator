@@ -1,15 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Store } from "vuex";
+export {};
 
-declare module "vue/types/vue" {
-  interface Vue {
-    // Only in Popup
-    $store: Store<any>;
-    $dragula: any;
-    // Only in Import
-    $entries: OTPEntryInterface[];
-    $encryption: EncryptionInterface;
-    // In all
+declare module "vue" {
+  interface ComponentCustomProperties {
     i18n: { [key: string]: string };
   }
 }

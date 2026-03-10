@@ -33,7 +33,8 @@
     "@types/sinon": "^21.0.0",
     "@types/sinon-chai": "^3.2.12",
     "@types/sinon-chrome": "^2.2.10",
-    "@vitejs/plugin-vue2": "^2.3.3",
+    "@types/sortablejs": "^1.15.0",
+    "@vitejs/plugin-vue": "^5.2.0",
     "buffer": "^6.0.3",
     "chai": "^4.5.0",
     "crypto-js": "^4.2.0",
@@ -54,7 +55,7 @@
     "typescript-eslint": "^8.0.0",
     "util": "^0.12.5",
     "vite": "^6.0.0",
-    "@vue/test-utils": "^1.3.6"
+    "@vue/test-utils": "^2.4.0"
   },
   "dependencies": {
     "argon2-browser": "^1.18.0",
@@ -62,8 +63,8 @@
     "node-gost-crypto": "^1.0.2",
     "qrcode-generator": "^1.4.4",
     "qrcode-reader": "^1.0.4",
-    "vue": "^2.7.16",
-    "vue2-dragula": "^2.5.4",
-    "vuex": "^3.6.2"
+    "pinia": "^2.3.0",
+    "sortablejs": "^1.15.0",
+    "vue": "^3.5.0"
   }
 }

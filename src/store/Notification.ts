@@ -1,63 +1,49 @@
-import { ActionContext } from "vuex";
+import { defineStore } from "pinia";
+import { useStyleStore } from "./Style";
 
-export class Notification implements Module {
-  getModule() {
-    return {
-      state: {
-        message: [], // Message content for alert with ok button
-        confirmMessage: "", // Message content for alert with yes / no
-        messageIdle: true, // Should show alert box?
-        notification: "", // Ephermal message text
-      },
-      mutations: {
-        alert: (state: NotificationState, message: string) => {
-          state.message.unshift(message);
-        },
-        closeAlert: (state: NotificationState) => {
-          state.messageIdle = false;
-          state.message.shift();
-          setTimeout(() => {
-            state.messageIdle = true;
-          }, 200);
-        },
-        setConfirm: (state: NotificationState, message: string) => {
-          state.confirmMessage = message;
-        },
-        setNotification: (state: NotificationState, message: string) => {
-          state.notification = message;
-        },
-      },
-      actions: {
-        confirm: async (
-          state: ActionContext<NotificationState, object>,
-          message: string,
-        ) => {
-          return new Promise((resolve: (value: boolean) => void) => {
-            state.commit("setConfirm", message);
-            window.addEventListener("confirm", (event) => {
-              state.commit("setConfirm", "");
-              if (!this.isCustomEvent(event)) {
-                resolve(false);
-                return;
-              }
-              resolve(event.detail);
-              return;
-            });
-          });
-        },
-        ephermalMessage: (
-          state: ActionContext<NotificationState, object>,
-          message: string,
-        ) => {
-          state.commit("setNotification", message);
-          state.commit("style/showNotification", null, { root: true });
-        },
-      },
-      namespaced: true,
-    };
-  }
-
-  private isCustomEvent(event: Event): event is CustomEvent {
-    return "detail" in event;
-  }
+function isCustomEvent(event: Event): event is CustomEvent {
+  return "detail" in event;
 }
+
+export const useNotificationStore = defineStore("notification", {
+  state: () => ({
+    message: [] as string[], // Message content for alert with ok button
+    confirmMessage: "", // Message content for alert with yes / no
+    messageIdle: true, // Should show alert box?
+    notification: "", // Ephermal message text
+  }),
+  actions: {
+    alert(message: string) {
+      this.message.unshift(message);
+    },
+    closeAlert() {
+      this.messageIdle = false;
+      this.message.shift();
+      setTimeout(() => {
+        this.messageIdle = true;
+      }, 200);
+    },
+    setConfirm(message: string) {
+      this.confirmMessage = message;
+    },
+    async confirm(message: string): Promise<boolean> {
+      return new Promise((resolve: (value: boolean) => void) => {
+        this.confirmMessage = message;
+        window.addEventListener("confirm", (event) => {
+          this.confirmMessage = "";
+          if (!isCustomEvent(event)) {
+            resolve(false);
+            return;
+          }
+          resolve(event.detail);
+          return;
+        });
+      });
+    },
+    ephermalMessage(message: string) {
+      this.notification = message;
+      const styleStore = useStyleStore();
+      styleStore.showNotification();
+    },
+  },
+});

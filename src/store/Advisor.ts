@@ -1,3 +1,4 @@
+import { defineStore } from "pinia";
 import { EntryStorage } from "../models/storage";
 import { InsightLevel, AdvisorInsight } from "../models/advisor";
 import { StorageLocation, UserSettings } from "../models/settings";
@@ -58,64 +59,63 @@ const insightsData: AdvisorInsightInterface[] = [
   },
 ];
 
-export class Advisor implements Module {
-  async getModule() {
-    await UserSettings.updateItems();
-    return {
-      state: {
-        insights: await this.getInsights(),
-        ignoreList: UserSettings.items.advisorIgnoreList || [],
-      },
-      mutations: {
-        dismissInsight: async (state: AdvisorState, insightId: string) => {
-          state.ignoreList.push(insightId);
-          UserSettings.items.advisorIgnoreList = state.ignoreList;
-          UserSettings.commitItems();
+async function getInsights(): Promise<AdvisorInsight[]> {
+  await UserSettings.updateItems();
+  const advisorIgnoreList: string[] =
+    typeof UserSettings.items.advisorIgnoreList === "string"
+      ? JSON.parse(UserSettings.items.advisorIgnoreList || "[]")
+      : UserSettings.items.advisorIgnoreList || [];
 
-          state.insights = await this.getInsights();
-        },
-        clearIgnoreList: async (state: AdvisorState) => {
-          state.ignoreList = [];
-          UserSettings.items.advisorIgnoreList = undefined;
-          UserSettings.commitItems();
+  const filteredInsightsData: AdvisorInsightInterface[] = [];
 
-          state.insights = await this.getInsights();
-        },
-        updateInsight: async (state: AdvisorState) => {
-          state.insights = await this.getInsights();
-          state.ignoreList =
-            typeof UserSettings.items.advisorIgnoreList === "string"
-              ? JSON.parse(UserSettings.items.advisorIgnoreList || "[]")
-              : UserSettings.items.advisorIgnoreList || [];
-        },
-      },
-      namespaced: true,
-    };
-  }
-
-  private async getInsights() {
-    await UserSettings.updateItems();
-    const advisorIgnoreList: string[] =
-      typeof UserSettings.items.advisorIgnoreList === "string"
-        ? JSON.parse(UserSettings.items.advisorIgnoreList || "[]")
-        : UserSettings.items.advisorIgnoreList || [];
-
-    const filteredInsightsData: AdvisorInsightInterface[] = [];
-
-    for (const insightData of insightsData) {
-      if (advisorIgnoreList.includes(insightData.id)) {
-        continue;
-      }
-
-      const validation = await insightData.validation();
-
-      if (validation) {
-        filteredInsightsData.push(insightData);
-      }
+  for (const insightData of insightsData) {
+    if (advisorIgnoreList.includes(insightData.id)) {
+      continue;
     }
 
-    return filteredInsightsData.map(
-      (insightData) => new AdvisorInsight(insightData),
-    );
+    const validation = await insightData.validation();
+
+    if (validation) {
+      filteredInsightsData.push(insightData);
+    }
   }
+
+  return filteredInsightsData.map(
+    (insightData) => new AdvisorInsight(insightData),
+  );
 }
+
+export const useAdvisorStore = defineStore("advisor", {
+  state: () => ({
+    insights: [] as AdvisorInsight[],
+    ignoreList: [] as string[],
+  }),
+  actions: {
+    async init() {
+      await UserSettings.updateItems();
+      this.insights = await getInsights();
+      this.ignoreList = UserSettings.items.advisorIgnoreList || [];
+    },
+    async dismissInsight(insightId: string) {
+      this.ignoreList.push(insightId);
+      UserSettings.items.advisorIgnoreList = this.ignoreList;
+      UserSettings.commitItems();
+
+      this.insights = await getInsights();
+    },
+    async clearIgnoreList() {
+      this.ignoreList = [];
+      UserSettings.items.advisorIgnoreList = undefined;
+      UserSettings.commitItems();
+
+      this.insights = await getInsights();
+    },
+    async updateInsight() {
+      this.insights = await getInsights();
+      this.ignoreList =
+        typeof UserSettings.items.advisorIgnoreList === "string"
+          ? JSON.parse(UserSettings.items.advisorIgnoreList || "[]")
+          : UserSettings.items.advisorIgnoreList || [];
+    },
+  },
+});

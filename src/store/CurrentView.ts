@@ -1,15 +1,12 @@
-export class CurrentView implements Module {
-  getModule() {
-    return {
-      state: {
-        info: "",
-      },
-      mutations: {
-        changeView(state: { info: string }, viewName: string) {
-          state.info = viewName;
-        },
-      },
-      namespaced: true,
-    };
-  }
-}
+import { defineStore } from "pinia";
+
+export const useCurrentViewStore = defineStore("currentView", {
+  state: () => ({
+    info: "",
+  }),
+  actions: {
+    changeView(viewName: string) {
+      this.info = viewName;
+    },
+  },
+});

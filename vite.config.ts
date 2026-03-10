@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue2';
+import vue from '@vitejs/plugin-vue';
 import fs from 'fs';
 
 // Custom plugin to load .wasm files as base64 strings (replaces base64-loader)
@@ -15,17 +15,16 @@ function wasmBase64Plugin() {
   };
 }
 
-// Custom plugin to load .svg files as Vue 2 components (replaces vue-svg-loader)
-function svgVue2Plugin() {
+// Custom plugin to load .svg files as Vue components (replaces vue-svg-loader)
+function svgVuePlugin() {
   return {
-    name: 'svg-vue2-component',
+    name: 'svg-vue-component',
     transform(code: string, id: string) {
       if (id.endsWith('.svg')) {
         const svg = fs.readFileSync(id, 'utf-8');
-        // Escape backticks and backslashes in SVG content
         const escaped = svg.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
         return {
-          code: `export default { functional: true, render(h, context) { return h('span', { ...context.data, domProps: { innerHTML: \`${escaped}\` } }) } }`,
+          code: `import { h } from 'vue'; export default { render() { return h('span', { innerHTML: \`${escaped}\` }) } }`,
           map: null,
         };
       }
@@ -34,7 +33,7 @@ function svgVue2Plugin() {
 }
 
 export default defineConfig(({ mode }) => ({
-  plugins: [vue(), wasmBase64Plugin(), svgVue2Plugin()],
+  plugins: [vue(), wasmBase64Plugin(), svgVuePlugin()],
   build: {
     outDir: 'dist',
     sourcemap: mode !== 'production',

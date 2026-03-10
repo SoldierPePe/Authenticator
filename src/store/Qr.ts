@@ -1,15 +1,12 @@
-export class Qr implements Module {
-  getModule() {
-    return {
-      state: {
-        qr: "",
-      },
-      mutations: {
-        setQr(state: { qr: string }, url: string) {
-          state.qr = `url(${url})`;
-        },
-      },
-      namespaced: true,
-    };
-  }
-}
+import { defineStore } from "pinia";
+
+export const useQrStore = defineStore("qr", {
+  state: () => ({
+    qr: "",
+  }),
+  actions: {
+    setQr(url: string) {
+      this.qr = `url(${url})`;
+    },
+  },
+});
