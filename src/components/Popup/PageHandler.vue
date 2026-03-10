@@ -7,10 +7,11 @@
     >
       <IconXCircle />
     </div>
-    <component v-bind:is="info" id="infoContent"></component>
+    <component v-bind:is="currentPage" id="infoContent"></component>
   </div>
 </template>
 <script setup lang="ts">
+import { computed } from "vue";
 import { storeToRefs } from "pinia";
 
 import IconXCircle from "../../../svg/x-circle.svg";
@@ -34,6 +35,22 @@ const currentViewStore = useCurrentViewStore();
 const styleStore = useStyleStore();
 
 const { info } = storeToRefs(currentViewStore);
+
+const pageComponents: Record<string, any> = {
+  AddAccountPage,
+  AddMethodPage,
+  SetPasswordPage,
+  EnterPasswordPage,
+  BackupPage,
+  DropboxPage,
+  DrivePage,
+  OneDrivePage,
+  PreferencesPage,
+  AdvisorPage,
+  LoadingPage,
+};
+
+const currentPage = computed(() => pageComponents[info.value] || null);
 
 function hideInfo() {
   styleStore.hideInfo();
